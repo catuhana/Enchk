@@ -1,11 +1,19 @@
 import net.fabricmc.loom.task.prod.ClientProductionRunTask
-import org.gradle.api.tasks.compile.JavaCompile
-import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 plugins {
     kotlin("jvm") version "2.4.21"
 
     id("net.fabricmc.fabric-loom") version "1.19.1"
+}
+
+kotlin {
+    jvmToolchain(25)
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
 }
 
 val minecraftVersion = property("minecraft_version") as String
@@ -31,6 +39,15 @@ repositories {
 
 loom {
     accessWidenerPath = file("src/main/resources/enchk.aw")
+
+    splitEnvironmentSourceSets()
+
+    mods {
+        register("enchk") {
+            sourceSet("client")
+            sourceSet("main")
+        }
+    }
 }
 
 dependencies {
@@ -53,7 +70,8 @@ dependencies {
         libs.latticg,
         libs.jspecify,
 
-        sourceSets.main.get().output
+        sourceSets["client"].output,
+        sourceSets["main"].output
     ).forEach {
         add("codeGenImplementation", it)
     }
@@ -106,11 +124,5 @@ tasks {
         mainClass = "io.github.catuhana.enchk.codegen.CodeGenerator"
 
         args(file("src/main/java").absolutePath)
-    }
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
     }
 }
