@@ -16,7 +16,7 @@ public class ConsumableMixin {
     @Inject(method = "emitParticlesAndSounds", at = @At("HEAD"))
     private void onEmitParticlesAndSounds(RandomSource rand, LivingEntity entity, ItemStack stack, int particleCount, CallbackInfo ci) {
         if (entity == Minecraft.getInstance().player) {
-            PlayerRandCracker.onConsume(stack, entity.position(), particleCount, entity.getUseItemRemainingTicks(), (Consumable) (Object) this);
+            PlayerRandCracker.onConsume(particleCount, entity.getUseItemRemainingTicks(), (Consumable) (Object) this);
         }
     }
 }

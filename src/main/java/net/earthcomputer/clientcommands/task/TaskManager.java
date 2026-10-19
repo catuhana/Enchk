@@ -4,7 +4,6 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.Dynamic2CommandExceptionType;
 import com.mojang.logging.LogUtils;
 import net.earthcomputer.clientcommands.event.ClientLevelEvents;
-import net.earthcomputer.clientcommands.features.Relogger;
 import net.earthcomputer.clientcommands.util.CComponentUtil;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
@@ -97,16 +96,8 @@ public class TaskManager {
             }
         }
 
-        if (isDisconnect && Relogger.isRelogging) {
-            Relogger.relogSuccessTasks.add(() -> {
-                for (var oldTask : oldTasks) {
-                    tasks.put(oldTask.getKey(), oldTask.getValue());
-                }
-            });
-        } else {
-            for (var taskEntry : oldTasks) {
-                taskEntry.getValue().onCompleted();
-            }
+        for (var taskEntry : oldTasks) {
+            taskEntry.getValue().onCompleted();
         }
     }
 

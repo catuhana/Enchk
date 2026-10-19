@@ -25,8 +25,6 @@ repositories {
     maven("https://maven.seedfinding.com")
     maven("https://maven.latticg.com")
     maven("https://maven.xpple.dev/maven2")
-    maven("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
-    maven("https://maven.parchmentmc.org")
 }
 
 loom {
@@ -44,18 +42,9 @@ dependencies {
     implementation("net.fabricmc:fabric-loader:$loaderVersion")
     implementation("net.fabricmc.fabric-api:fabric-api:$fabricVersion")
 
-    listOf(
-        libs.betterconfig.fabric,
-        libs.clientarguments,
-        libs.simplewaypoints,
-    ).forEach {
-        include(implementation(it.get())!!)
-    }
+    include(implementation(libs.betterconfig.fabric.get())!!)
 
     listOf(
-        libs.mc.biome,
-        libs.mc.core,
-        libs.mc.feature,
         libs.mc.seed,
 
         variantOf(libs.latticg) { classifier("rt") }
@@ -82,8 +71,6 @@ tasks {
         }
 
         from("LICENSE")
-
-        manifest.attributes(mapOf("Main-Class" to "net.earthcomputer.clientcommands.DoubleClickMain"))
     }
 
     processResources {

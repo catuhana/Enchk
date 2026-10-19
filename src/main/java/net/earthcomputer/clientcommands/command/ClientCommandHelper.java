@@ -38,10 +38,6 @@ public class ClientCommandHelper {
         Minecraft.getInstance().gui.hud.getChat().addClientSystemMessage(message);
     }
 
-    public static void sendRequiresRestart() {
-        sendFeedback(Component.translatable("commands.client.requiresRestart").withStyle(ChatFormatting.YELLOW));
-    }
-
     public static void addOverlayMessage(Component message, int time) {
         Gui gui = Minecraft.getInstance().gui;
         gui.hud.setOverlayMessage(message, false);

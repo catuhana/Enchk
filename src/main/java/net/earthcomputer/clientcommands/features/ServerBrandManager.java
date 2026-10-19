@@ -29,9 +29,6 @@ public class ServerBrandManager {
     }
 
     private static void onDisconnect() {
-        if (hasWarnedRng && Relogger.isRelogging) {
-            Relogger.relogSuccessTasks.add(() -> hasWarnedRng = true);
-        }
         hasWarnedRng = false;
     }
 

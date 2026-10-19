@@ -18,12 +18,6 @@ public final class ClientConnectionEvents {
         }
     });
 
-    public static final Event<SendPacket> SEND_PACKET_NO_UNPACK_BUNDLES = EventFactory.createArrayBacked(SendPacket.class, listeners -> (connection, packet) -> {
-        for (SendPacket listener : listeners) {
-            listener.onSendPacket(connection, packet);
-        }
-    });
-
     @FunctionalInterface
     public interface Disconnect {
         void onDisconnect();

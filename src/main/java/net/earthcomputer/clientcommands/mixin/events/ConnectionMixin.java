@@ -9,7 +9,6 @@ import net.minecraft.network.protocol.BundlePacket;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
 import org.jspecify.annotations.Nullable;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -25,13 +24,11 @@ public class ConnectionMixin {
     private volatile @Nullable PacketListener packetListener;
 
     @Shadow
-    @Final
     private PacketFlow receiving;
 
     @Inject(method = "sendPacket", at = @At("HEAD"))
     private void onSendPacket(Packet<?> packet, @Nullable ChannelFutureListener listener, boolean flush, CallbackInfo ci) {
         if (this.receiving == PacketFlow.CLIENTBOUND && this.packetListener instanceof ClientPacketListener connection) {
-            ClientConnectionEvents.SEND_PACKET_NO_UNPACK_BUNDLES.invoker().onSendPacket(connection, packet);
             unpackBundle(packet, subPacket -> ClientConnectionEvents.SEND_PACKET.invoker().onSendPacket(connection, subPacket));
         }
     }

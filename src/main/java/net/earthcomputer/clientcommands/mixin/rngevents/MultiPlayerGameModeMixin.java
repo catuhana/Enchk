@@ -35,19 +35,4 @@ public class MultiPlayerGameModeMixin {
     private void onDrop(CallbackInfo ci) {
         PlayerRandCracker.onDropItem();
     }
-
-    @Inject(method = "startPrediction", at = @At("HEAD"))
-    private void preStartPrediction(CallbackInfo ci) {
-        PlayerRandCracker.isPredictingBlockBreaking = true;
-    }
-
-    @Inject(method = "startPrediction", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;send(Lnet/minecraft/network/protocol/Packet;)V", shift = At.Shift.AFTER))
-    private void postStartPrediction(CallbackInfo ci) {
-        PlayerRandCracker.postSendBlockBreakingPredictionPacket();
-    }
-
-    @Inject(method = "startPrediction", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/prediction/BlockStatePredictionHandler;close()V"))
-    private void startPredictionFinally(CallbackInfo ci) {
-        PlayerRandCracker.isPredictingBlockBreaking = false;
-    }
 }

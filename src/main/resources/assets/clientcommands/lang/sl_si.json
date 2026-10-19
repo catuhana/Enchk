@@ -1,46 +1,17 @@
 {
-  "commands.calias.notFound": "Bližnjica \"%s\" ni najdena",
-
-  "commands.cbook.success": "Knjiga je bila uspešno urejena",
-
-  "commands.ccalc.expected": "Pričakovano %s",
-  "commands.ccalc.invalidArgumentCount": "Funkcija \"%s\" ne more vzeti %s argumentov",
-
   "commands.ccrackrng.starting": "Ugotavljanje semena igralca",
   "commands.ccrackrng.success": "RNG seme igralca uspešno ugotovljeno: %s",
-
   "commands.cenchant.failed": "Nemogoče je ali bi trajalo pre dolgo, da bi dobile te čare",
   "commands.cenchant.incompatible": "Nezdružljivi čari",
   "commands.cenchant.needEnchantingPrediction": "Ta ukaz zahteva, da je omogočeno predvidevanje čaranja",
   "commands.cenchant.success": "Začatek manipulacije čaranja...",
   "commands.cenchant.uncracked": "Seme mora biti ugotovljeno",
-
-  "commands.cfind.found": "Najdeno %s ob %s, %s blokov proč",
-  "commands.cfind.noMatch": "Nič se ne ujema z vašo poizvedbo",
-  "commands.cfind.success": "%s entitet se ujema z vašo poizvedbo",
-
-  "commands.cfindblock.notFound": "Takega bloka ni mogoče najti",
-  "commands.cfindblock.success": "Najbližje ujemanje je ob %s, %s blokov vstran",
-
-  "commands.cfinditem.match": "%sx %s najdeno ob %s",
-  "commands.cfinditem.starting": "Iskati %s",
-  "commands.cfinditem.starting.keepSearching": "Neskončno iskanje za %s",
-  "commands.cfinditem.total": "Skupno najdeno %sx %s",
-
-  "commands.client.blockpos": "(%s, %s, %s)",
   "commands.client.cancel": "Prekliči",
   "commands.client.crack": "Ugotovi",
   "commands.client.enable": "Omogoči",
-  "commands.client.expectedRegex": "Nepravilen regex %s",
-
-  "commands.crender.entities.success": "Pravila za upodabljanje entitet so bila posodobljena",
-
   "commands.ctask.list.noTasks": "Nič trenutno izvajajočih nalog",
   "commands.ctask.list.success": "%s trenutno izvajajočih nalog",
   "commands.ctask.stop.noMatch": "Ni ujemajočih se nalog",
-
-  "commands.cwiki.failed": "Vsebine wikija ni bilo mogoče pridobiti",
-
   "enchCrack.addInfo": "Dodaj informacije",
   "enchCrack.clues": "Namigi:",
   "enchCrack.enchantments": "Uroki:",
@@ -51,7 +22,6 @@
   "enchCrack.insn.itemThrows.noDummy": "Brez poskusnega čaranja",
   "enchCrack.insn.ready": "Vaše seme čaranje je pripravljeno",
   "enchCrack.insn.slot": "V mestu: %s",
-  "enchCrack.playerRNGSeed.many": "Možna RNG semena igralci: %s",
   "enchCrack.slot": "Mesto %s:",
   "enchCrack.state": "Stanje ugotavljanja semena čaranja: %s",
   "enchCrack.state.cracked": "Ugotovljeno",
@@ -59,8 +29,6 @@
   "enchCrack.state.uncracked": "Neugotovljeno",
   "enchCrack.xpSeed.many": "Možna XP semena: %s",
   "enchCrack.xpSeed.one": "XP Seme: %s",
-
-  "playerManip.reset.advancement": "Dosežen Napredek",
   "playerManip.reset.anvil": "Nakovalo Uporabljeno",
   "playerManip.reset.baneOfArthropods": "Zadet Členonožec z Uničevalcem Členonožcev",
   "playerManip.reset.drink": "Piti",
@@ -76,8 +44,6 @@
   "playerManip.reset.playerHurt": "Igralec Ranjen",
   "playerManip.reset.potion": "Učinek Napoja Aktiven",
   "playerManip.reset.recreated": "Igralec Obnovljen",
-  "playerManip.reset.respiration": "Dihalna Čelada Uporabljena",
-  "playerManip.reset.shield": "Blokirano z Ščitom",
   "playerManip.reset.sprint": "Tek",
   "playerManip.reset.swim": "Plavanje",
   "playerManip.reset.unbreaking": "Uporabljen Predmet z Neuničevanjem",
@@ -85,10 +51,8 @@
   "playerManip.state": "Stanje ugotavljanja semena igralca: %s",
   "playerManip.state.cracked": "Ugotovljeno",
   "playerManip.state.cracking": "Se ugotavlja",
-  "playerManip.state.eating": "Jesti",
   "playerManip.state.ench_cracking_1": "Ugotavljanje Semena Čaranja 1",
   "playerManip.state.ench_cracking_2": "Ugotavljanje Semena Čaranja 2",
   "playerManip.state.half_cracked": "Napol Ugotovljeno",
-  "playerManip.state.uncracked": "Neugotovljeno",
-  "playerManip.toolBreakWarning": "Opozorilo: orodju ostaja %s trajnosti"
+  "playerManip.state.uncracked": "Neugotovljeno"
 }

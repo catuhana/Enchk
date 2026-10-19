@@ -1,32 +1,12 @@
 package net.earthcomputer.clientcommands;
 
-import com.google.common.base.Suppliers;
-import dev.xpple.betterconfig.api.BetterConfigAPI;
 import dev.xpple.betterconfig.api.Config;
-import dev.xpple.betterconfig.api.ModConfig;
-import net.earthcomputer.clientcommands.command.ReplyCommand;
-import net.earthcomputer.clientcommands.features.ChorusManipulation;
 import net.earthcomputer.clientcommands.features.EnchantmentCracker;
-import net.earthcomputer.clientcommands.features.FishingCracker;
 import net.earthcomputer.clientcommands.features.PlayerRandCracker;
 import net.earthcomputer.clientcommands.features.ServerBrandManager;
-import net.earthcomputer.clientcommands.util.MultiVersionCompat;
-import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import net.minecraft.util.StringRepresentable;
-
-import java.util.Locale;
-import java.util.function.Supplier;
 
 public class Configs {
-    private static final Supplier<ModConfig<Component>> CONFIG_REF = Suppliers.memoize(() -> BetterConfigAPI.getInstance().getModConfig("clientcommands"));
-
-    public static void save() {
-        CONFIG_REF.get().save();
-    }
-
-    @Config(readOnly = true, temporary = true)
-    public static double calcAnswer = 0;
 
     @Config(readOnly = true, temporary = true)
     public static EnchantmentCracker.CrackState enchCrackState = EnchantmentCracker.CrackState.UNCRACKED;
@@ -44,36 +24,8 @@ public class Configs {
         }
     }
 
-    public enum FishingManipulation implements StringRepresentable {
-        OFF,
-        MANUAL,
-        AFK;
-
-        @Override
-        public String getSerializedName() {
-            return this.name().toLowerCase(Locale.ROOT);
-        }
-
-        public boolean isEnabled() {
-            return this != OFF;
-        }
-    }
-
-    @Config(onChange = "onChangeFishingManipulation", temporary = true, condition = "conditionLessThan1_20")
-    public static FishingManipulation fishingManipulation = FishingManipulation.OFF;
-    private static void onChangeFishingManipulation(FishingManipulation oldFishingManipulation, FishingManipulation fishingManipulation) {
-        if (fishingManipulation.isEnabled()) {
-            ServerBrandManager.rngWarning();
-        } else {
-            FishingCracker.reset();
-        }
-    }
-
     @Config(temporary = true)
     public static boolean playerRNGMaintenance = true;
-
-    @Config
-    public static boolean toolBreakWarning = false;
 
     @Config(setter = @Config.Setter("setMaxEnchantItemThrows"))
     private static int maxEnchantItemThrows = 64 * 256;
@@ -135,64 +87,6 @@ public class Configs {
         Configs.minEnchantLevels = Math.min(Configs.minEnchantLevels, Configs.maxEnchantLevels);
     }
 
-    @Config(onChange = "onChangeChorusManipulation", temporary = true)
-    public static boolean chorusManipulation = false;
-    public static void onChangeChorusManipulation(boolean oldChorusManipulation, boolean chorusManipulation) {
-        if (chorusManipulation) {
-            ServerBrandManager.rngWarning();
-            ChorusManipulation.onChorusManipEnabled();
-        }
-    }
-
-    @Config(setter = @Config.Setter("setMaxChorusItemThrows"))
-    private static int maxChorusItemThrows = 64 * 32;
-    public static int getMaxChorusItemThrows() {
-        return maxChorusItemThrows;
-    }
-    public static void setMaxChorusItemThrows(int maxChorusItemThrows) {
-        Configs.maxChorusItemThrows = Mth.clamp(maxChorusItemThrows, 0, 1000000);
-    }
-
-    @Config(temporary = true)
-    public static String autoPrefix = "";
-
-    @Config(temporary = true, condition = "conditionLessThan1_21")
-    public static boolean infiniteTools = false;
-
-    @Config
-    public static int commandExecutionLimit = 65536;
-
-    @Config
-    public static boolean acceptC2CPackets = false;
-
     @Config
     public static float itemThrowsPerTick = 1;
-
-    public static boolean conditionLessThan1_20() {
-        return MultiVersionCompat.INSTANCE.getProtocolVersion() < MultiVersionCompat.V1_20;
-    }
-
-    public static boolean conditionLessThan1_21() {
-        return MultiVersionCompat.INSTANCE.getProtocolVersion() < MultiVersionCompat.V1_21;
-    }
-
-    @Config
-    public static PacketDumpMethod packetDumpMethod = PacketDumpMethod.REFLECTION;
-
-    public enum PacketDumpMethod {
-        REFLECTION,
-        BYTE_BUF,
-    }
-
-    @Config
-    public static int maximumPacketFieldDepth = 10;
-
-    @Config(temporary = true, setter = @Config.Setter("setMinimumReplyDelaySeconds"))
-    public static float minimumReplyDelaySeconds = 0.5f;
-    public static void setMinimumReplyDelaySeconds(float minimumReplyDelaySeconds) {
-        Configs.minimumReplyDelaySeconds = Math.clamp(minimumReplyDelaySeconds, 0.0f, ReplyCommand.MAXIMUM_REPLY_DELAY_SECONDS);
-    }
-
-    @Config(readOnly = true)
-    public static int overriddenFps = 0;
 }

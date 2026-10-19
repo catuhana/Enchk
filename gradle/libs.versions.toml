@@ -1,11 +1,6 @@
 [libraries]
 betterconfig-fabric = { module = "dev.xpple:betterconfig-fabric", version = "2.9.0" }
-clientarguments = { module = "dev.xpple:clientarguments", version = "1.14.0" }
-simplewaypoints = { module = "dev.xpple:simplewaypoints", version = "1.5.1" }
 
-mc_core = { module = "com.seedfinding:mc_core", version = "1.210.0" }
-mc_feature = { module = "com.seedfinding:mc_feature", version = "1.171.11" }
-mc_biome = { module = "com.seedfinding:mc_biome", version = "1.171.1" }
 mc_seed = { module = "com.seedfinding:mc_seed", version = "1.171.2" }
 
 mcdev_annotations = { module = "com.demonwav.mcdev:annotations", version = "2.0.0" }
