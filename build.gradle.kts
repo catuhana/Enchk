@@ -30,12 +30,7 @@ repositories {
 }
 
 loom {
-    accessWidenerPath.set(file("src/main/resources/clientcommands.aw"))
-}
-
-loom.runs.configureEach {
-    jvmArguments.add("-enableassertions")
-    systemProperties.put("fabric.loom.suppressNarratorError", "true")
+    accessWidenerPath = file("src/main/resources/enchk.aw")
 }
 
 dependencies {
@@ -108,7 +103,7 @@ tasks {
         enableAssertions = true
 
         classpath = sourceSets["codeGen"].runtimeClasspath
-        mainClass = "net.earthcomputer.clientcommands.codegen.CodeGenerator"
+        mainClass = "io.github.catuhana.enchk.codegen.CodeGenerator"
 
         args(file("src/main/java").absolutePath)
     }

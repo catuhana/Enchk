@@ -1,28 +1,18 @@
 {
   "schemaVersion": 1,
-  "id": "clientcommands",
-  "name": "Client Commands",
-  "description": "Useful client-side commands",
+  "id": "enchk",
+  "name": "Enchk",
+  "description": "Enchantment Cracking",
   "version": "${mod_version}",
   "environment": "client",
   "license": "LGPL-3.0-or-later",
-  "icon": "assets/clientcommands/icon.png",
-  "contact": {
-    "homepage": "https://earthcomputer.net/",
-    "issues": "https://github.com/Earthcomputer/clientcommands/issues",
-    "sources": "https://github.com/Earthcomputer/clientcommands"
-  },
+  "icon": "assets/enchk/icon.png",
   "authors": [
-    "Earthcomputer"
-  ],
-  "contributors": [
-    "cortex",
-    "haykam",
-    "xpple"
+    "tuhana"
   ],
   "entrypoints": {
     "client": [
-      "net.earthcomputer.clientcommands.ClientCommands"
+       "io.github.catuhana.enchk.Enchk"
     ]
   },
   "depends": {
@@ -33,14 +23,9 @@
   },
   "mixins": [
     {
-      "config": "mixins.clientcommands.json",
+      "config": "enchk.mixins.json",
       "environment": "client"
     }
   ],
-  "accessWidener": "clientcommands.aw",
-  "custom": {
-    "modmenu": {
-      "update_checker": true
-    }
-  }
+  "accessWidener": "enchk.aw"
 }

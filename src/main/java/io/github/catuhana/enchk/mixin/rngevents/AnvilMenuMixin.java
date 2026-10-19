@@ -1,0 +1,23 @@
+package io.github.catuhana.enchk.mixin.rngevents;
+
+import io.github.catuhana.enchk.features.PlayerRandCracker;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AnvilMenu;
+import net.minecraft.world.item.ItemStack;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(AnvilMenu.class)
+public class AnvilMenuMixin {
+
+    @Inject(method = "onTake", at = @At("HEAD"))
+    public void onAnvilUse(Player player, ItemStack stack, CallbackInfo ci) {
+        if (player instanceof LocalPlayer && !player.getAbilities().instabuild) {
+            PlayerRandCracker.onAnvilUse();
+        }
+    }
+
+}
