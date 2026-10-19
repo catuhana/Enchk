@@ -9,6 +9,9 @@ plugins {
 
 val minecraft_version = property("minecraft_version") as String
 val loader_version = property("loader_version") as String
+
+val mod_version = property("mod_version") as String
+
 val fabric_api_version = property("fabric_api_version") as String
 val clientarguments_version = property("clientarguments_version") as String
 val betterconfig_version = property("betterconfig_version") as String
@@ -67,68 +70,61 @@ dependencies {
 
     compileOnly("com.demonwav.mcdev:annotations:2.0.0")
 
-    runtimeOnly("me.djtheredstoner:DevAuth-fabric:$devauth_version") {
-        exclude(group = "net.fabricmc", module = "fabric-loader")
-    }
-
     add("codeGenImplementation", sourceSets.main.get().output)
 }
 
-tasks.jar {
-    from(configurations["includedLibrary"].map { if (it.isDirectory) it else zipTree(it) }) {
-        include("com/seedfinding/**")
+tasks {
+    jar {
+        from(configurations["includedLibrary"].map { if (it.isDirectory) it else zipTree(it) }) {
+            include("com/seedfinding/**")
+        }
+
+        from("LICENSE")
+
+        manifest.attributes(mapOf("Main-Class" to "net.earthcomputer.clientcommands.DoubleClickMain"))
     }
 
-    from("LICENSE")
+    processResources {
+        duplicatesStrategy = DuplicatesStrategy.WARN
 
-    manifest.attributes(mapOf("Main-Class" to "net.earthcomputer.clientcommands.DoubleClickMain"))
-}
+        val properties = mapOf(
+            "mod_version" to mod_version,
+            "minecraft_version" to minecraft_version,
+            "loader_version" to loader_version,
+        )
 
-tasks.processResources {
-    inputs.property("version", project.version)
-    inputs.property("mcversion", minecraft_version)
+        inputs.properties(properties)
 
-    duplicatesStrategy = DuplicatesStrategy.WARN
-
-    from(sourceSets.main.get().resources.srcDirs) {
-        include("fabric.mod.json")
-        expand(mapOf("version" to project.version, "mcversion" to minecraft_version))
+        filesMatching("fabric.mod.json") {
+            expand(properties)
+        }
     }
 
-    from(sourceSets.main.get().resources.srcDirs) {
-        exclude("fabric.mod.json")
+    withType<JavaCompile> {
+        options.encoding = "UTF-8"
+    }
+
+    @Suppress("UnstableApiUsage")
+    register<ClientProductionRunTask>("prodClientTask") {
+        description = ""
+
+        runDir = file("run")
+    }
+
+    register<JavaExec>("codeGenTask") {
+        description = ""
+
+        enableAssertions = true
+
+        classpath = sourceSets["codeGen"].runtimeClasspath
+        mainClass = "net.earthcomputer.clientcommands.codegen.CodeGenerator"
+
+        args(file("src/main/java").absolutePath)
     }
 }
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(25))
+        languageVersion = JavaLanguageVersion.of(25)
     }
-}
-
-tasks.withType<JavaCompile>().configureEach {
-    options.encoding = "UTF-8"
-}
-
-tasks.register<ClientProductionRunTask>("prodClient") {
-    runDir.set(file("run"))
-
-    jvmArgs.add("-Ddevauth.enabled=true")
-
-    javaLauncher.set(javaToolchains.launcherFor {
-        languageVersion.set(JavaLanguageVersion.of(25))
-    })
-}
-
-tasks.register<Jar>("sourcesJar") {
-    dependsOn(tasks.named("classes"))
-    archiveClassifier.set("sources")
-    from(sourceSets.main.get().allSource)
-}
-
-tasks.register<JavaExec>("codeGen") {
-    mainClass.set("net.earthcomputer.clientcommands.codegen.CodeGenerator")
-    classpath = sourceSets["codeGen"].runtimeClasspath
-    args(file("src/main/java").absolutePath)
-    enableAssertions = true
 }

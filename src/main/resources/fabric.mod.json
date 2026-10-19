@@ -3,7 +3,7 @@
   "id": "clientcommands",
   "name": "Client Commands",
   "description": "Useful client-side commands",
-  "version": "${version}",
+  "version": "${mod_version}",
   "environment": "*",
   "license": "LGPL-3.0-or-later",
   "icon": "assets/clientcommands/icon.png",
@@ -29,8 +29,8 @@
     ]
   },
   "depends": {
-    "minecraft": "${mcversion}",
-    "fabricloader": ">=0.18.4",
+    "minecraft": "${minecraft_version}",
+    "fabricloader": "${loader_version}",
     "fabric-api": "*",
     "betterconfig": "*",
     "clientarguments": "*",
