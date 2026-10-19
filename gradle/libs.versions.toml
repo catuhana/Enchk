@@ -3,7 +3,7 @@ betterconfig-fabric = { module = "dev.xpple:betterconfig-fabric", version = "2.9
 
 mc_seed = { module = "com.seedfinding:mc_seed", version = "1.171.2" }
 
-mcdev_annotations = { module = "com.demonwav.mcdev:annotations", version = "2.0.0" }
+mcdev_annotations = { module = "com.demonwav.mcdev:annotations", version = "2.1.0" }
 
 latticg = { module = "com.seedfinding:latticg", version = "1.07" }
-jspecify = { module = "org.jspecify:jspecify", version = "1.0.0" }
+jspecify = { module = "org.jspecify:jspecify", version = "1.0.1" }
