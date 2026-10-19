@@ -3,6 +3,8 @@ import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 plugins {
+    kotlin("jvm") version "2.4.21"
+
     id("net.fabricmc.fabric-loom") version "1.19.1"
 }
 
