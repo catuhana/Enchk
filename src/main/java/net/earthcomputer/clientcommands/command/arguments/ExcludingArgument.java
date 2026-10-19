@@ -3,20 +3,15 @@ package net.earthcomputer.clientcommands.command.arguments;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.context.ParsedCommandNode;
-import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.earthcomputer.clientcommands.command.Flag;
-import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -28,14 +23,6 @@ public class ExcludingArgument<T, U extends ArgumentType<T>> implements Argument
     public final ArrayList<Exclusion> exclusions;
     @Nullable
     private List<String> cachedExamples = null;
-
-    public static <T, U extends ArgumentType<T>> ExcludingArgument<T, U> excluding(U argument, ArgumentType<?>... exclusions) {
-        return new ExcludingArgument<>(argument, Arrays.stream(exclusions).map(Exclusion::forArgument).toList());
-    }
-
-    public static <T, U extends ArgumentType<T>> ExcludingArgument<T, U> excluding(U argument, Flag<?>... exclusions) {
-        return new ExcludingArgument<>(argument, Arrays.stream(exclusions).map(Exclusion::forFlag).toList());
-    }
 
     public static <T, U extends ArgumentType<T>> ExcludingArgument<T, U> excluding(U argument, Exclusion... exclusions) {
         return new ExcludingArgument<>(argument, List.of(exclusions));
@@ -94,17 +81,6 @@ public class ExcludingArgument<T, U extends ArgumentType<T>> implements Argument
 
     public interface Exclusion {
         boolean canParse(StringReader reader);
-
-        static Exclusion forArgument(ArgumentType<?> argumentType) {
-            return reader -> {
-                try {
-                    argumentType.parse(reader);
-                    return true;
-                } catch (CommandSyntaxException ignored) {
-                    return false;
-                }
-            };
-        }
 
         static Exclusion forFlag(Flag<?> flag) {
             return reader -> {

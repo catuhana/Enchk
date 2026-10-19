@@ -17,6 +17,6 @@ public class FishingRodItemMixin {
     @Inject(method = "use", at = @At(value = "FIELD", target = "Lnet/minecraft/sounds/SoundEvents;FISHING_BOBBER_RETRIEVE:Lnet/minecraft/sounds/SoundEvent;"))
     public void onRetrieveFishingRod(Level level, Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> ci) {
         ItemStack stack = player.getItemInHand(hand);
-        PlayerRandCracker.onItemDamageUncertain(1, 5, player, stack);
+        PlayerRandCracker.onItemDamageUncertain(5, player, stack);
     }
 }

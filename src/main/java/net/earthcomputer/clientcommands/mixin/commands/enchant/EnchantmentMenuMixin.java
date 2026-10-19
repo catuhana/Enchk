@@ -15,7 +15,7 @@ public class EnchantmentMenuMixin extends AbstractContainerMenuMixin {
 
     @Override
     protected void clientcommands_onEnchantmentSetData(DataSlot slot) {
-        if (slot == enchantmentSeed && EnchantmentCracker.isEnchantingPredictionEnabled()) {
+        if (slot == enchantmentSeed) {
             EnchantmentCracker.checkXpSeedState((EnchantmentMenu) (Object) this);
         }
     }

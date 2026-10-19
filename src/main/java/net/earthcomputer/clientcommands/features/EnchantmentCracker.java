@@ -374,7 +374,7 @@ public class EnchantmentCracker {
             return;
         }
 
-        if (Configs.playerCrackState == PlayerRandCracker.CrackState.UNCRACKED && !isEnchantingPredictionEnabled()) {
+        if (Configs.playerCrackState == PlayerRandCracker.CrackState.UNCRACKED) {
             return;
         }
         if (Configs.playerCrackState.knowsSeed()) {
@@ -638,10 +638,6 @@ public class EnchantmentCracker {
     }
 
     // MISCELLANEOUS HELPER METHODS & ENCHANTING SIMULATION
-
-    public static boolean isEnchantingPredictionEnabled() {
-        return Configs.enchantingPrediction;
-    }
 
     private static int getEnchantPower(Level level, BlockPos tablePos) {
         int power = 0;

@@ -52,7 +52,7 @@ public class ClientSuggestionsProviderMixin implements IClientSuggestionsProvide
         } else {
             return suggestions.stream().filter(suggestion -> {
                 String text = suggestion.getText();
-                return !Flag.isFlag(text) || flags.keySet().stream().noneMatch(arg -> !arg.isRepeatable() && (text.equals(arg.getFlag()) || text.equals(arg.getShortFlag())));
+                return !Flag.isFlag(text) || flags.keySet().stream().noneMatch(arg -> (text.equals(arg.getFlag()) || text.equals(arg.getShortFlag())));
             }).toList();
         }
     }

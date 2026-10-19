@@ -55,14 +55,6 @@ public class CEnchantCommand {
     }
 
     private static int cenchant(FabricClientCommandSource source, ItemAndEnchantmentsPredicate itemAndEnchantmentsPredicate) throws CommandSyntaxException {
-        if (!Configs.enchantingPrediction) {
-            Component component = Component.translatable("commands.cenchant.needEnchantingPrediction")
-                    .withStyle(ChatFormatting.RED)
-                    .append(" ")
-                    .append(CComponentUtil.getCommandTextComponent("commands.client.enable", "/cconfig clientcommands enchantingPrediction set true"));
-            source.sendFeedback(component);
-            return Command.SINGLE_SUCCESS;
-        }
         if (!Configs.playerCrackState.knowsSeed() && Configs.enchCrackState != EnchantmentCracker.CrackState.CRACKED) {
             Component component = Component.translatable("commands.cenchant.uncracked")
                     .withStyle(ChatFormatting.RED)

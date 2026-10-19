@@ -241,7 +241,7 @@ public class PlayerRandCracker {
         }
     }
 
-    public static void onItemDamageUncertain(int minAmount, int maxAmount, LivingEntity holder, ItemStack stack) {
+    public static void onItemDamageUncertain(int maxAmount, LivingEntity holder, ItemStack stack) {
         boolean unbreakingCallsRandom = MultiVersionCompat.INSTANCE.getProtocolVersion() < MultiVersionCompat.V1_21;
         if (holder instanceof LocalPlayer player && !player.getAbilities().instabuild) {
             if (stack.isDamageableItem()) {

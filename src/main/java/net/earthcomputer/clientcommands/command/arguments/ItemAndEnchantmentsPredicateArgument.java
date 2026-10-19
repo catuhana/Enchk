@@ -60,11 +60,6 @@ public class ItemAndEnchantmentsPredicateArgument implements ArgumentType<ItemAn
         return new ItemAndEnchantmentsPredicateArgument(holderLookupProvider);
     }
 
-    public ItemAndEnchantmentsPredicateArgument withItemPredicate(Predicate<Item> predicate) {
-        this.itemPredicate = predicate;
-        return this;
-    }
-
     public ItemAndEnchantmentsPredicateArgument withEnchantmentPredicate(BiPredicate<Item, Holder<Enchantment>> predicate) {
         this.enchantmentPredicate = predicate;
         return this;

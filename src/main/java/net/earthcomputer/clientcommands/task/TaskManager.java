@@ -116,14 +116,6 @@ public class TaskManager {
         return actualName;
     }
 
-    public static String addNonConflictingTask(String name, LongTask task) {
-        try {
-            return addTask(name, task);
-        } catch (CommandSyntaxException e) {
-            throw new AssertionError("Task " + task + " was conflicting but it was asserted that the task can't conflict");
-        }
-    }
-
     public static void forceAddTask(String fullName, LongTask task) {
         tasks.put(fullName, task);
         forceAddedTaskName = fullName;

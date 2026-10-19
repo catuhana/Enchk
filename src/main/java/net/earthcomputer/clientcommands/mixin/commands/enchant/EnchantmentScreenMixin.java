@@ -24,9 +24,7 @@ public abstract class EnchantmentScreenMixin extends AbstractContainerScreen<Enc
 
     @Inject(method = "extractRenderState", at = @At("TAIL"))
     private void postExtract(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float ignored, CallbackInfo ci) {
-        if (EnchantmentCracker.isEnchantingPredictionEnabled()) {
-            EnchantmentCracker.extractEnchantmentGUIOverlay(graphics, this.menu);
-        }
+        EnchantmentCracker.extractEnchantmentGUIOverlay(graphics, this.menu);
     }
 
     @Inject(method = "mouseClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;handleInventoryButtonClick(II)V"))
@@ -36,10 +34,8 @@ public abstract class EnchantmentScreenMixin extends AbstractContainerScreen<Enc
 
     @Inject(method = "init", at = @At("TAIL"))
     private void onInit(CallbackInfo ci) {
-        if (EnchantmentCracker.isEnchantingPredictionEnabled()) {
-            addRenderableWidget(Button.builder(Component.translatable("enchCrack.addInfo"), _ -> {
-                EnchantmentCracker.addEnchantmentSeedInfo(Minecraft.getInstance().level, this.menu);
-            }).pos(width - 150, 0).build());
-        }
+        addRenderableWidget(Button.builder(Component.translatable("enchCrack.addInfo"), _ -> {
+            EnchantmentCracker.addEnchantmentSeedInfo(Minecraft.getInstance().level, this.menu);
+        }).pos(width - 150, 0).build());
     }
 }
