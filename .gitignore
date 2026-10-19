@@ -1,19 +1,15 @@
 # gradle
-
 .gradle/
 build/
 out/
 
 # idea
-
-.idea/*
-!.idea/icon.svg
+.idea/
 *.iml
 *.ipr
 *.iws
 
 # vscode
-
 .settings/
 .vscode/
 bin/
@@ -21,8 +17,5 @@ bin/
 .project
 
 # fabric
-
 run/
 logs/
-
-/changelog.txt
