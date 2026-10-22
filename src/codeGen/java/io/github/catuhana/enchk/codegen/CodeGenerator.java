@@ -31,7 +31,7 @@ public class CodeGenerator {
             program.skip(2);
         }
 
-        writeLattiCGClass(program.build(), "io.github.catuhana.enchck.features.CCrackRngGen", destDir);
+        writeLattiCGClass(program.build(), "io.github.catuhana.enchk.features.CCrackRngGen", destDir);
     }
 
     private static void writeLattiCGClass(Program program, String fqName, Path destDir) throws IOException {
