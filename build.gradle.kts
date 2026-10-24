@@ -1,5 +1,7 @@
 import net.fabricmc.loom.task.prod.ClientProductionRunTask
 
+val javaVersion = property("java_version") as String
+
 plugins {
     kotlin("jvm") version "2.4.21"
 
@@ -7,12 +9,12 @@ plugins {
 }
 
 kotlin {
-    jvmToolchain(25)
+    jvmToolchain(javaVersion.toInt())
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(javaVersion)
     }
 }
 
@@ -94,6 +96,7 @@ tasks {
         val properties = mapOf(
             "mod_version" to modVersion,
             "minecraft_version" to minecraftVersion,
+            "java_version" to javaVersion,
             "loader_version" to loaderVersion,
         )
 

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "enchk",
   "name": "Enchk",
-  "description": "Enchantment Cracking",
+  "description": "Enchantment cracking",
   "version": "${mod_version}",
   "environment": "client",
   "license": "LGPL-3.0-or-later",
@@ -12,18 +12,19 @@
   ],
   "entrypoints": {
     "client": [
-       "io.github.catuhana.enchk.Enchk"
+      "io.github.catuhana.enchk.Enchk"
     ]
   },
   "depends": {
-    "minecraft": "${minecraft_version}",
-    "fabricloader": "${loader_version}",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=${java_version}",
+    "fabricloader": ">=${loader_version}",
     "fabric-api": "*",
     "betterconfig": "*"
   },
   "mixins": [
     {
-      "config": "enchk.mixins.json",
+      "config": "enchk.client.mixins.json",
       "environment": "client"
     }
   ],
