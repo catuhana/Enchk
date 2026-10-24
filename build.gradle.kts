@@ -3,7 +3,7 @@ import net.fabricmc.loom.task.prod.ClientProductionRunTask
 plugins {
     kotlin("jvm") version "2.4.21"
 
-    id("net.fabricmc.fabric-loom") version "1.19.1"
+    id("net.fabricmc.fabric-loom") version "1.19.3"
 }
 
 kotlin {
