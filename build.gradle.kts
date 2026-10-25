@@ -1,28 +1,16 @@
 import net.fabricmc.loom.task.prod.ClientProductionRunTask
 
-val javaVersion = property("java_version") as String
-
 plugins {
-    kotlin("jvm") version "2.4.21"
-
-    id("net.fabricmc.fabric-loom") version "1.19.3"
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.fabric.loom)
 }
+
+val modVersion = property("mod_version") as String
+val javaVersion = libs.versions.java.get()
 
 kotlin {
     jvmToolchain(javaVersion.toInt())
 }
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(javaVersion)
-    }
-}
-
-val minecraftVersion = property("minecraft_version") as String
-val loaderVersion = property("loader_version") as String
-val fabricVersion = property("fabric_version") as String
-
-val modVersion = property("mod_version") as String
 
 sourceSets {
     create("codeGen")
@@ -53,10 +41,10 @@ loom {
 }
 
 dependencies {
-    minecraft("com.mojang:minecraft:$minecraftVersion")
+    minecraft(libs.minecraft)
 
-    implementation("net.fabricmc:fabric-loader:$loaderVersion")
-    implementation("net.fabricmc.fabric-api:fabric-api:$fabricVersion")
+    implementation(libs.fabric.loader)
+    implementation(libs.fabric.api)
 
     include(implementation(libs.betterconfig.fabric.get())!!)
 
@@ -95,9 +83,9 @@ tasks {
 
         val properties = mapOf(
             "mod_version" to modVersion,
-            "minecraft_version" to minecraftVersion,
+            "minecraft_version" to libs.versions.minecraft.get(),
             "java_version" to javaVersion,
-            "loader_version" to loaderVersion,
+            "loader_version" to libs.versions.fabric.loader.get(),
         )
 
         inputs.properties(properties)
