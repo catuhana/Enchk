@@ -16,24 +16,21 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class TaskManager {
+    /**
+     * The mutex for all intensive tasks, to make sure only one can run at a time
+     */
+    public static final Object INTENSIVE_TASK_MUTEX = new Object();
     private static final Logger LOGGER = LogUtils.getLogger();
-
     private static final Dynamic2CommandExceptionType CONFLICTING_TASK_EXCEPTION =
-        new Dynamic2CommandExceptionType((conflictingTask, cancel) -> Component.translatable("commands.ctask.conflicting", conflictingTask, cancel));
+            new Dynamic2CommandExceptionType((conflictingTask, cancel) -> Component.translatable("commands.ctask.conflicting", conflictingTask, cancel));
+    private static final Map<String, LongTask> tasks = new LinkedHashMap<>();
+    private static long nextTaskId = 1;
+    private static String forceAddedTaskName = null;
 
     static {
         ClientTickEvents.START_CLIENT_TICK.register(TaskManager::tick);
         ClientLevelEvents.UNLOAD_LEVEL.register(TaskManager::onLevelUnload);
     }
-
-    /**
-     * The mutex for all intensive tasks, to make sure only one can run at a time
-     */
-    public static final Object INTENSIVE_TASK_MUTEX = new Object();
-
-    private static final Map<String, LongTask> tasks = new LinkedHashMap<>();
-    private static long nextTaskId = 1;
-    private static String forceAddedTaskName = null;
 
     private static void tick(Minecraft mc) {
         if (tasks.isEmpty()) {
@@ -105,8 +102,8 @@ public class TaskManager {
         for (var otherTask : tasks.entrySet()) {
             if (task.conflictsWith(otherTask.getValue())) {
                 throw CONFLICTING_TASK_EXCEPTION.create(
-                    otherTask.getKey(),
-                    CComponentUtil.getCommandTextComponent("commands.client.cancel", "/ctask stop " + otherTask.getKey())
+                        otherTask.getKey(),
+                        CComponentUtil.getCommandTextComponent("commands.client.cancel", "/ctask stop " + otherTask.getKey())
                 );
             }
         }

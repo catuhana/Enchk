@@ -2,11 +2,11 @@ package io.github.catuhana.enchk.features;
 
 import com.demonwav.mcdev.annotations.Translatable;
 import io.github.catuhana.enchk.Configs;
-import io.github.catuhana.enchk.util.CUtil;
-import io.github.catuhana.enchk.util.MultiVersionCompat;
 import io.github.catuhana.enchk.command.ClientCommandHelper;
 import io.github.catuhana.enchk.event.ClientLevelEvents;
 import io.github.catuhana.enchk.interfaces.ICreativeSlot;
+import io.github.catuhana.enchk.util.CUtil;
+import io.github.catuhana.enchk.util.MultiVersionCompat;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.ChatFormatting;
@@ -48,7 +48,11 @@ public class PlayerRandCracker {
     public static final long MULTIPLIER = 0x5deece66dL;
     public static final long ADDEND = 0xbL;
     public static final long MASK = (1L << 48) - 1;
-
+    public static final Event<RNGCallListener> RNG_CALLED_EVENT = EventFactory.createArrayBacked(RNGCallListener.class, listeners -> event -> {
+        for (RNGCallListener listener : listeners) {
+            listener.onCall(event);
+        }
+    });
     private static long seed;
 
     private static int next(int bits) {
@@ -69,17 +73,13 @@ public class PlayerRandCracker {
         do {
             bits = next(31);
             val = bits % bound;
-        } while (bits - val + (bound-1) < 0);
+        } while (bits - val + (bound - 1) < 0);
 
         return val;
     }
 
     public static float nextFloat() {
         return next(24) / (float) (1 << 24);
-    }
-
-    public static void setSeed(long seed) {
-        PlayerRandCracker.seed = seed;
     }
 
     public static long getSeed() {
@@ -89,11 +89,9 @@ public class PlayerRandCracker {
 
     // ===== RESET DETECTION + PLAYER RNG MAINTENANCE ===== //
 
-    public static final Event<RNGCallListener> RNG_CALLED_EVENT = EventFactory.createArrayBacked(RNGCallListener.class, listeners -> event -> {
-        for (RNGCallListener listener : listeners) {
-            listener.onCall(event);
-        }
-    });
+    public static void setSeed(long seed) {
+        PlayerRandCracker.seed = seed;
+    }
 
     public static void registerEvents() {
         ClientLevelEvents.LOAD_LEVEL.register(level -> {
@@ -133,7 +131,7 @@ public class PlayerRandCracker {
             // non-eating actions (e.g. drinking) have no random calls prior to 1.21.2
             return;
         }
-        
+
         RNGCallType callType = switch (consumable.animation()) {
             case EAT -> RNGCallType.FOOD;
             case DRINK -> RNGCallType.DRINK;
@@ -341,51 +339,6 @@ public class PlayerRandCracker {
         return slots.stream().filter(slot -> slot.getItem().getItem() == preferredItem).findFirst().get();
     }
 
-    public static class ThrowItemsResult {
-        private final Type type;
-        private final Object[] messageArgs;
-
-        public ThrowItemsResult(Type type, Object... messageArgs) {
-            this.type = type;
-            this.messageArgs = messageArgs;
-        }
-
-        public boolean isSuccess() {
-            return type.success;
-        }
-
-        public Type getType() {
-            return type;
-        }
-
-        public void sendErrorMessage() {
-            for (MutableComponent message : type.messageCreator.apply(messageArgs)) {
-                ClientCommandHelper.sendFeedback(message);
-            }
-        }
-
-        public enum Type {
-            NOT_ENOUGH_ITEMS(false, args -> List.of(
-                Component.translatable("playerManip.notEnoughItems", args).withStyle(ChatFormatting.RED),
-                Component.translatable("playerManip.notEnoughItems.help").withStyle(ChatFormatting.AQUA)
-            )),
-            THROTTLED(false, args -> List.of(
-                Component.translatable("playerManip.throttled", args).withStyle(ChatFormatting.RED),
-                Component.translatable("playerManip.throttled.help").withStyle(ChatFormatting.AQUA)
-            )),
-            SUCCESS(true, (Function<Object[], List<MutableComponent>>) null),
-            ;
-
-            private final boolean success;
-            private final Function<Object[], List<MutableComponent>> messageCreator;
-
-            Type(boolean success, Function<Object[], List<MutableComponent>> messageCreator) {
-                this.success = success;
-                this.messageCreator = messageCreator;
-            }
-        }
-    }
-
     public enum CrackState implements StringRepresentable {
         UNCRACKED("uncracked"),
         CRACKED("cracked", true),
@@ -397,9 +350,11 @@ public class PlayerRandCracker {
 
         private final String name;
         private final boolean knowsSeed;
+
         CrackState(@Translatable(prefix = "playerManip.state.") String name) {
             this(name, false);
         }
+
         CrackState(@Translatable(prefix = "playerManip.state.") String name, boolean knowsSeed) {
             this.name = name;
             this.knowsSeed = knowsSeed;
@@ -412,34 +367,6 @@ public class PlayerRandCracker {
 
         public boolean knowsSeed() {
             return knowsSeed;
-        }
-    }
-
-    @FunctionalInterface
-    public interface RNGCallListener {
-        void onCall(RNGCallEvent event);
-    }
-
-    public static final class RNGCallEvent {
-        private final RNGCallType type;
-        private boolean isMaintained;
-        private boolean isMaintainedEvenIfSeedUnknown = false;
-
-        public RNGCallEvent(RNGCallType type, boolean isMaintained) {
-            this.type = type;
-            this.isMaintained = isMaintained;
-        }
-
-        public RNGCallType getType() {
-            return type;
-        }
-
-        public void setMaintained() {
-            this.isMaintained = true;
-        }
-
-        public void setMaintainedEvenIfSeedUnknown() {
-            this.isMaintainedEvenIfSeedUnknown = true;
         }
     }
 
@@ -474,12 +401,86 @@ public class PlayerRandCracker {
         ;
 
         private final Component resetMessage;
+
         RNGCallType(@Translatable(prefix = "playerManip.reset.") String resetMessage) {
             this.resetMessage = Component.translatable("playerManip.reset." + resetMessage);
         }
 
         public Component getResetMessage() {
             return resetMessage;
+        }
+    }
+
+    @FunctionalInterface
+    public interface RNGCallListener {
+        void onCall(RNGCallEvent event);
+    }
+
+    public static class ThrowItemsResult {
+        private final Type type;
+        private final Object[] messageArgs;
+
+        public ThrowItemsResult(Type type, Object... messageArgs) {
+            this.type = type;
+            this.messageArgs = messageArgs;
+        }
+
+        public boolean isSuccess() {
+            return type.success;
+        }
+
+        public Type getType() {
+            return type;
+        }
+
+        public void sendErrorMessage() {
+            for (MutableComponent message : type.messageCreator.apply(messageArgs)) {
+                ClientCommandHelper.sendFeedback(message);
+            }
+        }
+
+        public enum Type {
+            NOT_ENOUGH_ITEMS(false, args -> List.of(
+                    Component.translatable("playerManip.notEnoughItems", args).withStyle(ChatFormatting.RED),
+                    Component.translatable("playerManip.notEnoughItems.help").withStyle(ChatFormatting.AQUA)
+            )),
+            THROTTLED(false, args -> List.of(
+                    Component.translatable("playerManip.throttled", args).withStyle(ChatFormatting.RED),
+                    Component.translatable("playerManip.throttled.help").withStyle(ChatFormatting.AQUA)
+            )),
+            SUCCESS(true, (Function<Object[], List<MutableComponent>>) null),
+            ;
+
+            private final boolean success;
+            private final Function<Object[], List<MutableComponent>> messageCreator;
+
+            Type(boolean success, Function<Object[], List<MutableComponent>> messageCreator) {
+                this.success = success;
+                this.messageCreator = messageCreator;
+            }
+        }
+    }
+
+    public static final class RNGCallEvent {
+        private final RNGCallType type;
+        private boolean isMaintained;
+        private boolean isMaintainedEvenIfSeedUnknown = false;
+
+        public RNGCallEvent(RNGCallType type, boolean isMaintained) {
+            this.type = type;
+            this.isMaintained = isMaintained;
+        }
+
+        public RNGCallType getType() {
+            return type;
+        }
+
+        public void setMaintained() {
+            this.isMaintained = true;
+        }
+
+        public void setMaintainedEvenIfSeedUnknown() {
+            this.isMaintainedEvenIfSeedUnknown = true;
         }
     }
 

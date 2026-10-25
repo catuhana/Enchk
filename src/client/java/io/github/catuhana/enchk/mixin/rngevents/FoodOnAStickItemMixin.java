@@ -17,7 +17,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(FoodOnAStickItem.class)
 public class FoodOnAStickItemMixin {
 
-    @Shadow @Final private int consumeItemDamage;
+    @Shadow
+    @Final
+    private int consumeItemDamage;
 
     @Inject(method = "use", at = @At("HEAD"))
     public void onUse(Level level, Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> ci) {

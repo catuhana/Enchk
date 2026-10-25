@@ -27,7 +27,8 @@ public abstract class LongTask {
         return broken || !condition();
     }
 
-    public void onCompleted() {}
+    public void onCompleted() {
+    }
 
     public final void scheduleDelay() {
         delayScheduled = true;

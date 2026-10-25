@@ -12,7 +12,9 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(MerchantMenu.class)
 public class MerchantMenuMixin implements IDroppableInventoryContainer {
 
-    @Shadow @Final private MerchantContainer tradeContainer;
+    @Shadow
+    @Final
+    private MerchantContainer tradeContainer;
 
     @Override
     public Container getDroppableInventory() {

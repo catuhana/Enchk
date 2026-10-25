@@ -17,12 +17,7 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.IntUnaryOperator;
 
 public enum LegacyEnchantment {
@@ -99,25 +94,25 @@ public enum LegacyEnchantment {
     public final ResourceKey<Enchantment> enchantmentKey;
     public final Component displayName;
     public final int maxLevel;
-    private final Weight weight;
     public final int introducedVersion;
     public final TagKey<Item> primaryItems;
     public final TagKey<Item> supportedItems;
+    private final Weight weight;
     private final IntUnaryOperator minEnchantability;
     private final IntUnaryOperator maxEnchantability;
     @MagicConstant(flagsFromClass = Flags.class)
     private final int flags;
 
     LegacyEnchantment(
-        ResourceKey<Enchantment> enchantmentKey,
-        int maxLevel,
-        Weight weight,
-        int introducedVersion,
-        TagKey<Item> primaryItems,
-        TagKey<Item> supportedItems,
-        IntUnaryOperator minEnchantability,
-        IntUnaryOperator maxEnchantability,
-        @MagicConstant(flagsFromClass = Flags.class) int... flags
+            ResourceKey<Enchantment> enchantmentKey,
+            int maxLevel,
+            Weight weight,
+            int introducedVersion,
+            TagKey<Item> primaryItems,
+            TagKey<Item> supportedItems,
+            IntUnaryOperator minEnchantability,
+            IntUnaryOperator maxEnchantability,
+            @MagicConstant(flagsFromClass = Flags.class) int... flags
     ) {
         this.enchantmentKey = enchantmentKey;
         this.displayName = Component.translatable(enchantmentKey.identifier().toLanguageKey("enchantment"));
@@ -139,29 +134,6 @@ public enum LegacyEnchantment {
     @Nullable
     public static LegacyEnchantment byEnchantmentKey(ResourceKey<Enchantment> enchantmentKey) {
         return BY_KEY.get(enchantmentKey);
-    }
-
-    public boolean isTreasure() {
-        return (flags & Flags.TREASURE) != 0;
-    }
-
-    public boolean isDiscoverable() {
-        return (flags & Flags.NON_DISCOVERABLE) == 0;
-    }
-
-    public boolean inEnchantmentTable() {
-        return !isTreasure() && isDiscoverable();
-    }
-
-    public boolean isCompatible(LegacyEnchantment other, int version) {
-        ExclusiveSet set = EXCLUSIVE_SETS.get(this);
-        if (set == null) {
-            return true;
-        }
-        if (set.ignoreOnVersions != null && set.ignoreOnVersions.matches(version)) {
-            return true;
-        }
-        return !set.set.contains(other);
     }
 
     private static List<Instance> getHighestAllowedEnchantments(int level, ItemStack item, boolean treasure, int version) {
@@ -264,6 +236,29 @@ public enum LegacyEnchantment {
             }
         }
         return null;
+    }
+
+    public boolean isTreasure() {
+        return (flags & Flags.TREASURE) != 0;
+    }
+
+    public boolean isDiscoverable() {
+        return (flags & Flags.NON_DISCOVERABLE) == 0;
+    }
+
+    public boolean inEnchantmentTable() {
+        return !isTreasure() && isDiscoverable();
+    }
+
+    public boolean isCompatible(LegacyEnchantment other, int version) {
+        ExclusiveSet set = EXCLUSIVE_SETS.get(this);
+        if (set == null) {
+            return true;
+        }
+        if (set.ignoreOnVersions != null && set.ignoreOnVersions.matches(version)) {
+            return true;
+        }
+        return !set.set.contains(other);
     }
 
     private enum Weight {

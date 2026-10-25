@@ -11,8 +11,10 @@ import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.mojang.brigadier.arguments.StringArgumentType.*;
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.*;
+import static com.mojang.brigadier.arguments.StringArgumentType.getString;
+import static com.mojang.brigadier.arguments.StringArgumentType.string;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.argument;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal;
 
 public class TaskCommand {
 
@@ -20,13 +22,13 @@ public class TaskCommand {
 
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
         dispatcher.register(literal("ctask")
-            .then(literal("list")
-                .executes(ctx -> listTasks(ctx.getSource())))
-            .then(literal("stop-all")
-                .executes(ctx -> stopTasks(ctx.getSource(), "")))
-            .then(literal("stop")
-                .then(argument("pattern", string())
-                    .executes(ctx -> stopTasks(ctx.getSource(), getString(ctx, "pattern"))))));
+                .then(literal("list")
+                        .executes(ctx -> listTasks(ctx.getSource())))
+                .then(literal("stop-all")
+                        .executes(ctx -> stopTasks(ctx.getSource(), "")))
+                .then(literal("stop")
+                        .then(argument("pattern", string())
+                                .executes(ctx -> stopTasks(ctx.getSource(), getString(ctx, "pattern"))))));
     }
 
     private static int listTasks(FabricClientCommandSource source) {

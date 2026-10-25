@@ -14,43 +14,42 @@ public class Configs {
 
     @Config(temporary = true)
     public static boolean playerRNGMaintenance = true;
-
+    @Config
+    public static float itemThrowsPerTick = 1;
     @Config()
     private static int maxEnchantItemThrows = 64 * 256;
+    @Config(temporary = true)
+    private static int minEnchantBookshelves = 0;
+    @Config(temporary = true)
+    private static int maxEnchantBookshelves = 15;
+    @Config(temporary = true)
+    private static int minEnchantLevels = 1;
+    @Config(temporary = true)
+    private static int maxEnchantSlot = 3;
+    @Config(temporary = true)
+    private static int maxEnchantLevels = 30;
+
     public static int getMaxEnchantItemThrows() {
         return maxEnchantItemThrows;
     }
 
-    @Config(temporary = true)
-    private static int minEnchantBookshelves = 0;
     public static int getMinEnchantBookshelves() {
         return minEnchantBookshelves;
     }
 
-    @Config(temporary = true)
-    private static int maxEnchantBookshelves = 15;
     public static int getMaxEnchantBookshelves() {
         return maxEnchantBookshelves;
     }
 
-    @Config(temporary = true)
-    private static int minEnchantLevels = 1;
     public static int getMinEnchantLevels() {
         return minEnchantLevels;
     }
 
-    @Config(temporary = true)
-    private static int maxEnchantSlot = 3;
     public static int getMaxEnchantSlot() {
         return maxEnchantSlot;
     }
 
-    @Config(temporary = true)
-    private static int maxEnchantLevels = 30;
     public static int getMaxEnchantLevels() {
         return maxEnchantLevels;
     }
-
-    @Config
-    public static float itemThrowsPerTick = 1;
 }

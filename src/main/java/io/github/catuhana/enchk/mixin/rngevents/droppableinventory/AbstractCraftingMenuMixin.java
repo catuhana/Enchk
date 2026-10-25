@@ -11,7 +11,8 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(AbstractCraftingMenu.class)
 public class AbstractCraftingMenuMixin implements IDroppableInventoryContainer {
 
-    @Shadow @Final
+    @Shadow
+    @Final
     protected CraftingContainer craftSlots;
 
     @Override

@@ -40,15 +40,6 @@ public abstract sealed class MultiVersionCompat {
     public static final int V1_21 = 767;
     public static final int V1_21_2 = 768;
     public static final int V1_21_9 = 773;
-
-    public abstract int getProtocolVersion();
-
-    public abstract String getProtocolName();
-
-    public boolean doesItemExist(Item item) {
-        return true;
-    }
-
     public static final MultiVersionCompat INSTANCE = Util.make(() -> {
         try {
             FabricLoader loader = FabricLoader.getInstance();
@@ -64,6 +55,14 @@ public abstract sealed class MultiVersionCompat {
             return new None();
         }
     });
+
+    public abstract int getProtocolVersion();
+
+    public abstract String getProtocolName();
+
+    public boolean doesItemExist(Item item) {
+        return true;
+    }
 
     private static final class None extends MultiVersionCompat {
         @Override

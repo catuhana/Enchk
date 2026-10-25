@@ -19,8 +19,8 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -30,11 +30,7 @@ import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -60,6 +56,10 @@ public class ItemAndEnchantmentsPredicateArgument implements ArgumentType<ItemAn
         return new ItemAndEnchantmentsPredicateArgument(holderLookupProvider);
     }
 
+    public static ItemAndEnchantmentsPredicate getItemAndEnchantmentsPredicate(CommandContext<?> context, String name) {
+        return context.getArgument(name, ItemAndEnchantmentsPredicate.class);
+    }
+
     public ItemAndEnchantmentsPredicateArgument withEnchantmentPredicate(BiPredicate<Item, Holder<Enchantment>> predicate) {
         this.enchantmentPredicate = predicate;
         return this;
@@ -68,10 +68,6 @@ public class ItemAndEnchantmentsPredicateArgument implements ArgumentType<ItemAn
     public ItemAndEnchantmentsPredicateArgument constrainMaxLevel() {
         this.constrainMaxLevel = true;
         return this;
-    }
-
-    public static ItemAndEnchantmentsPredicate getItemAndEnchantmentsPredicate(CommandContext<?> context, String name) {
-        return context.getArgument(name, ItemAndEnchantmentsPredicate.class);
     }
 
     @Override
@@ -148,28 +144,35 @@ public class ItemAndEnchantmentsPredicateArgument implements ArgumentType<ItemAn
         return EXAMPLES;
     }
 
-    public record ItemAndEnchantmentsPredicate(Item item, Predicate<List<EnchantmentInstance>> predicate, int numEnchantments) implements Predicate<ItemStack> {
+    public record ItemAndEnchantmentsPredicate(Item item, Predicate<List<EnchantmentInstance>> predicate,
+                                               int numEnchantments) implements Predicate<ItemStack> {
         @Override
         public boolean test(ItemStack stack) {
             if (item != stack.getItem() && (item != Items.BOOK || stack.getItem() != Items.ENCHANTED_BOOK)) {
                 return false;
             }
             List<EnchantmentInstance> enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).entrySet().stream()
-                .map(entry -> new EnchantmentInstance(entry.getKey(), entry.getIntValue()))
-                .toList();
+                    .map(entry -> new EnchantmentInstance(entry.getKey(), entry.getIntValue()))
+                    .toList();
             return predicate.test(enchantments);
+        }
+    }
+
+    private record EnchantmentInstancePredicate(Holder<Enchantment> enchantment,
+                                                MinMaxBounds.Ints level) implements Predicate<EnchantmentInstance> {
+        @Override
+        public boolean test(EnchantmentInstance enchInstance) {
+            return enchantment.equals(enchInstance.enchantment()) && level.matches(enchInstance.level());
         }
     }
 
     private class Parser {
         private final StringReader reader;
-        @Nullable
-        private Consumer<SuggestionsBuilder> suggestor;
-
-        private Item item;
         private final List<EnchantmentInstancePredicate> with = new ArrayList<>();
         private final List<EnchantmentInstancePredicate> without = new ArrayList<>();
-
+        @Nullable
+        private Consumer<SuggestionsBuilder> suggestor;
+        private Item item;
         private boolean exact = false;
         private boolean ordered = false;
 
@@ -247,13 +250,6 @@ public class ItemAndEnchantmentsPredicateArgument implements ArgumentType<ItemAn
             return true;
         }
 
-        private enum Option {
-            WITH,
-            WITHOUT,
-            EXACT,
-            ORDERED,
-        }
-
         @Nullable
         private Option parseOption() {
             suggestOption();
@@ -262,7 +258,8 @@ public class ItemAndEnchantmentsPredicateArgument implements ArgumentType<ItemAn
                 case "with" -> Option.WITH;
                 case "without" -> Option.WITHOUT;
                 case "exactly" -> exact ? null : Option.EXACT;
-                case "ordered" -> ordered || MultiVersionCompat.INSTANCE.getProtocolVersion() >= MultiVersionCompat.V1_21 ? null : Option.ORDERED;
+                case "ordered" ->
+                        ordered || MultiVersionCompat.INSTANCE.getProtocolVersion() >= MultiVersionCompat.V1_21 ? null : Option.ORDERED;
                 default -> null;
             };
         }
@@ -341,7 +338,8 @@ public class ItemAndEnchantmentsPredicateArgument implements ArgumentType<ItemAn
             }
 
             List<Integer> allowedLevels = new ArrayList<>();
-            nextLevel: for (int level = -1; level <= maxLevel; level++) {
+            nextLevel:
+            for (int level = -1; level <= maxLevel; level++) {
                 if (level == 0) {
                     continue;
                 }
@@ -375,8 +373,7 @@ public class ItemAndEnchantmentsPredicateArgument implements ArgumentType<ItemAn
                     for (int allowed : allowedLevels) {
                         if (allowed == -1) {
                             builder.suggest("*");
-                        }
-                        else {
+                        } else {
                             builder.suggest(allowed);
                         }
                     }
@@ -451,12 +448,12 @@ public class ItemAndEnchantmentsPredicateArgument implements ArgumentType<ItemAn
                 suggestions.add(builder);
             };
         }
-    }
 
-    private record EnchantmentInstancePredicate(Holder<Enchantment> enchantment, MinMaxBounds.Ints level) implements Predicate<EnchantmentInstance> {
-        @Override
-        public boolean test(EnchantmentInstance enchInstance) {
-            return enchantment.equals(enchInstance.enchantment()) && level.matches(enchInstance.level());
+        private enum Option {
+            WITH,
+            WITHOUT,
+            EXACT,
+            ORDERED,
         }
     }
 }

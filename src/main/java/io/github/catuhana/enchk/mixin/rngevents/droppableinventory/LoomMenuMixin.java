@@ -10,7 +10,9 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(LoomMenu.class)
 public class LoomMenuMixin implements IDroppableInventoryContainer {
 
-    @Shadow @Final private Container inputContainer;
+    @Shadow
+    @Final
+    private Container inputContainer;
 
     @Override
     public Container getDroppableInventory() {

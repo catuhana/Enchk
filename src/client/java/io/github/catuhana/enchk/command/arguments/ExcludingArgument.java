@@ -24,13 +24,13 @@ public class ExcludingArgument<T, U extends ArgumentType<T>> implements Argument
     @Nullable
     private List<String> cachedExamples = null;
 
-    public static <T, U extends ArgumentType<T>> ExcludingArgument<T, U> excluding(U argument, Exclusion... exclusions) {
-        return new ExcludingArgument<>(argument, List.of(exclusions));
-    }
-
     private ExcludingArgument(U argument, List<Exclusion> exclusions) {
         this.argument = argument;
         this.exclusions = new ArrayList<>(exclusions);
+    }
+
+    public static <T, U extends ArgumentType<T>> ExcludingArgument<T, U> excluding(U argument, Exclusion... exclusions) {
+        return new ExcludingArgument<>(argument, List.of(exclusions));
     }
 
     @Override
@@ -80,13 +80,13 @@ public class ExcludingArgument<T, U extends ArgumentType<T>> implements Argument
     }
 
     public interface Exclusion {
-        boolean canParse(StringReader reader);
-
         static Exclusion forFlag(Flag<?> flag) {
             return reader -> {
                 String str = reader.readUnquotedString();
                 return str.equals(flag.getShortFlag()) || str.equals(flag.getFlag());
             };
         }
+
+        boolean canParse(StringReader reader);
     }
 }

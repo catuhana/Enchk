@@ -18,13 +18,10 @@ import java.util.EnumSet;
 import java.util.Set;
 
 public abstract class ItemThrowTask extends SimpleTask {
-    private static final Logger LOGGER = LogUtils.getLogger();
-
-    private static final Set<Object> MUTEX_KEYS = Set.of(ItemThrowTask.class);
-
     public static final int FLAG_URGENT = 1;
     public static final int FLAG_WAIT_FOR_ITEMS = 2;
-
+    private static final Logger LOGGER = LogUtils.getLogger();
+    private static final Set<Object> MUTEX_KEYS = Set.of(ItemThrowTask.class);
     @Nullable
     private static WeakReference<ItemThrowTask> currentThrowTask = null;
 
@@ -35,7 +32,7 @@ public abstract class ItemThrowTask extends SimpleTask {
 
     private final int totalItemsToThrow;
     private final int flags;
-
+    private final Set<PlayerRandCracker.ThrowItemsResult.Type> errorTypesHappened = EnumSet.noneOf(PlayerRandCracker.ThrowItemsResult.Type.class);
     private int confirmedItemThrows;
     private int sentItemThrows;
     private float itemThrowsAllowedThisTick;
@@ -43,7 +40,6 @@ public abstract class ItemThrowTask extends SimpleTask {
     private boolean failed = false;
     private boolean isThrowingItem = false;
     private boolean hadUnexpectedRNGCall = false;
-    private final Set<PlayerRandCracker.ThrowItemsResult.Type> errorTypesHappened = EnumSet.noneOf(PlayerRandCracker.ThrowItemsResult.Type.class);
 
     public ItemThrowTask(int itemsToThrow) {
         this(itemsToThrow, 0);
@@ -52,6 +48,47 @@ public abstract class ItemThrowTask extends SimpleTask {
     public ItemThrowTask(int itemsToThrow, int flags) {
         this.totalItemsToThrow = itemsToThrow;
         this.flags = flags;
+    }
+
+    private static void handleItemSpawn(ClientboundAddEntityPacket packet) {
+        if (packet.getType() != EntityTypes.ITEM) {
+            return;
+        }
+
+        ItemThrowTask task = currentThrowTask == null ? null : currentThrowTask.get();
+        if (task == null) {
+            return;
+        }
+
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player == null) {
+            return;
+        }
+        if (player.getEyePosition().distanceToSqr(packet.getX(), packet.getY(), packet.getZ()) > 1) {
+            return;
+        }
+
+        task.confirmedItemThrows++;
+        task.onItemSpawn(packet);
+    }
+
+    private static void handleRNGCallEvent(PlayerRandCracker.RNGCallEvent event) {
+        ItemThrowTask task = currentThrowTask == null ? null : currentThrowTask.get();
+        if (task != null) {
+            if (task.isThrowingItem && event.getType() == PlayerRandCracker.RNGCallType.DROP_ITEM) {
+                if (task.requireCrackedRNG()) {
+                    event.setMaintained();
+                } else {
+                    event.setMaintainedEvenIfSeedUnknown();
+                }
+                task.isThrowingItem = false;
+            } else {
+                task.onUnexpectedRNGCall(event.getType());
+                task.hadUnexpectedRNGCall = true;
+                task.failed = true;
+                task._break();
+            }
+        }
     }
 
     @Override
@@ -142,47 +179,6 @@ public abstract class ItemThrowTask extends SimpleTask {
 
     protected boolean requireCrackedRNG() {
         return true;
-    }
-
-    private static void handleItemSpawn(ClientboundAddEntityPacket packet) {
-        if (packet.getType() != EntityTypes.ITEM) {
-            return;
-        }
-
-        ItemThrowTask task = currentThrowTask == null ? null : currentThrowTask.get();
-        if (task == null) {
-            return;
-        }
-
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null) {
-            return;
-        }
-        if (player.getEyePosition().distanceToSqr(packet.getX(), packet.getY(), packet.getZ()) > 1) {
-            return;
-        }
-
-        task.confirmedItemThrows++;
-        task.onItemSpawn(packet);
-    }
-
-    private static void handleRNGCallEvent(PlayerRandCracker.RNGCallEvent event) {
-        ItemThrowTask task = currentThrowTask == null ? null : currentThrowTask.get();
-        if (task != null) {
-            if (task.isThrowingItem && event.getType() == PlayerRandCracker.RNGCallType.DROP_ITEM) {
-                if (task.requireCrackedRNG()) {
-                    event.setMaintained();
-                } else {
-                    event.setMaintainedEvenIfSeedUnknown();
-                }
-                task.isThrowingItem = false;
-            } else {
-                task.onUnexpectedRNGCall(event.getType());
-                task.hadUnexpectedRNGCall = true;
-                task.failed = true;
-                task._break();
-            }
-        }
     }
 
     @Override

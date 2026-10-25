@@ -17,18 +17,11 @@ public class CCrackRng {
     public static final int NUM_THROWS = 10;
     // This value was computed by brute forcing all seeds
     public static final float MAX_ERROR = 0.00883889f;
-
-    @FunctionalInterface
-    public interface OnCrack {
-        void callback(long seed);
-    }
-
-
+    private static final int MAX_ATTEMPTS = 5;
     public static OnCrack callback;
     public static float[] nextFloats = new float[NUM_THROWS];
-    public static int expectedItems=0;
+    public static int expectedItems = 0;
     private static int attemptCount = 0;
-    private static final int MAX_ATTEMPTS = 5;
     private static String currentTaskName = null;
 
     private static String throwItems() throws CommandSyntaxException {
@@ -79,16 +72,16 @@ public class CCrackRng {
 
     public static void attemptCrack() throws CommandSyntaxException {
         long[] seeds = CCrackRngGen.getSeeds(
-            Math.max(0, nextFloats[0] - MAX_ERROR), Math.min(1, nextFloats[0] + MAX_ERROR),
-            Math.max(0, nextFloats[1] - MAX_ERROR), Math.min(1, nextFloats[1] + MAX_ERROR),
-            Math.max(0, nextFloats[2] - MAX_ERROR), Math.min(1, nextFloats[2] + MAX_ERROR),
-            Math.max(0, nextFloats[3] - MAX_ERROR), Math.min(1, nextFloats[3] + MAX_ERROR),
-            Math.max(0, nextFloats[4] - MAX_ERROR), Math.min(1, nextFloats[4] + MAX_ERROR),
-            Math.max(0, nextFloats[5] - MAX_ERROR), Math.min(1, nextFloats[5] + MAX_ERROR),
-            Math.max(0, nextFloats[6] - MAX_ERROR), Math.min(1, nextFloats[6] + MAX_ERROR),
-            Math.max(0, nextFloats[7] - MAX_ERROR), Math.min(1, nextFloats[7] + MAX_ERROR),
-            Math.max(0, nextFloats[8] - MAX_ERROR), Math.min(1, nextFloats[8] + MAX_ERROR),
-            Math.max(0, nextFloats[9] - MAX_ERROR), Math.min(1, nextFloats[9] + MAX_ERROR)
+                Math.max(0, nextFloats[0] - MAX_ERROR), Math.min(1, nextFloats[0] + MAX_ERROR),
+                Math.max(0, nextFloats[1] - MAX_ERROR), Math.min(1, nextFloats[1] + MAX_ERROR),
+                Math.max(0, nextFloats[2] - MAX_ERROR), Math.min(1, nextFloats[2] + MAX_ERROR),
+                Math.max(0, nextFloats[3] - MAX_ERROR), Math.min(1, nextFloats[3] + MAX_ERROR),
+                Math.max(0, nextFloats[4] - MAX_ERROR), Math.min(1, nextFloats[4] + MAX_ERROR),
+                Math.max(0, nextFloats[5] - MAX_ERROR), Math.min(1, nextFloats[5] + MAX_ERROR),
+                Math.max(0, nextFloats[6] - MAX_ERROR), Math.min(1, nextFloats[6] + MAX_ERROR),
+                Math.max(0, nextFloats[7] - MAX_ERROR), Math.min(1, nextFloats[7] + MAX_ERROR),
+                Math.max(0, nextFloats[8] - MAX_ERROR), Math.min(1, nextFloats[8] + MAX_ERROR),
+                Math.max(0, nextFloats[9] - MAX_ERROR), Math.min(1, nextFloats[9] + MAX_ERROR)
         ).toArray();
 
         if (seeds.length != 1) {
@@ -114,15 +107,15 @@ public class CCrackRng {
     }
 
     private static void doCrack(OnCrack Callback) throws CommandSyntaxException {
-        callback=Callback;
+        callback = Callback;
         ClientCommandHelper.addOverlayMessage(Component.translatable("commands.ccrackrng.retries", attemptCount, MAX_ATTEMPTS), 100);
         currentTaskName = throwItems();
         Configs.playerCrackState = PlayerRandCracker.CrackState.CRACKING;
         expectedItems = NUM_THROWS;
         if (attemptCount == 1) {
             Component message = Component.translatable("commands.ccrackrng.starting")
-                .append(" ")
-                .append(CComponentUtil.getCommandTextComponent("commands.client.cancel", "/ctask stop " + currentTaskName));
+                    .append(" ")
+                    .append(CComponentUtil.getCommandTextComponent("commands.client.cancel", "/ctask stop " + currentTaskName));
             ClientCommandHelper.sendFeedback(message);
         }
     }
@@ -135,5 +128,10 @@ public class CCrackRng {
                 CCrackRng.expectedItems--;
             }
         }
+    }
+
+    @FunctionalInterface
+    public interface OnCrack {
+        void callback(long seed);
     }
 }

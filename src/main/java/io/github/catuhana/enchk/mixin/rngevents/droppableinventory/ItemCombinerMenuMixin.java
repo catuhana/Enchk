@@ -10,7 +10,9 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(ItemCombinerMenu.class)
 public class ItemCombinerMenuMixin implements IDroppableInventoryContainer {
 
-    @Shadow @Final protected Container inputSlots;
+    @Shadow
+    @Final
+    protected Container inputSlots;
 
     @Override
     public Container getDroppableInventory() {

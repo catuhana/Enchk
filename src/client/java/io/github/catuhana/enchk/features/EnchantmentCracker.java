@@ -5,18 +5,13 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.logging.LogUtils;
 import com.seedfinding.mcseed.lcg.LCG;
 import com.seedfinding.mcseed.rand.Rand;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import io.github.catuhana.enchk.Configs;
 import io.github.catuhana.enchk.command.ClientCommandHelper;
 import io.github.catuhana.enchk.event.ClientLevelEvents;
-import io.github.catuhana.enchk.task.ItemThrowTask;
-import io.github.catuhana.enchk.task.LongTask;
-import io.github.catuhana.enchk.task.LongTaskList;
-import io.github.catuhana.enchk.task.OneTickTask;
-import io.github.catuhana.enchk.task.SimpleTask;
-import io.github.catuhana.enchk.task.TaskManager;
+import io.github.catuhana.enchk.task.*;
 import io.github.catuhana.enchk.util.MultiVersionCompat;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -52,13 +47,7 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -115,11 +104,25 @@ public class EnchantmentCracker {
 
     public static final Logger LOGGER = LogUtils.getLogger();
     private static final int PROGRESS_BAR_WIDTH = 50;
-
+    @Nullable
+    public static BlockPos enchantingTablePos = null;
+    static Set<Integer> possibleXPSeeds = new HashSet<>(1 << 20);
     @Nullable
     private static WeakReference<LongTask> currentEnchantingTask = null;
     private static boolean isCurrentlyThrowingItems = false;
+
+    // RENDERING
+    /*
+     * This section is in charge of rendering the overlay on the enchantment GUI
+     */
     private static int expectedNumBookshelves = -1;
+
+    // LOGIC
+    /*
+     * This section is in charge of the logic of the cracking
+     */
+    private static int firstXpSeed;
+    private static boolean doneEnchantment = false;
 
     public static void registerEvents() {
         ClientLevelEvents.UNLOAD_LEVEL.register(isDisconnect -> {
@@ -129,11 +132,6 @@ public class EnchantmentCracker {
         });
         PlayerRandCracker.RNG_CALLED_EVENT.register(EnchantmentCracker::onRNGCallEvent);
     }
-
-    // RENDERING
-    /*
-     * This section is in charge of rendering the overlay on the enchantment GUI
-     */
 
     public static void extractEnchantmentGUIOverlay(GuiGraphicsExtractor graphics, EnchantmentMenu menu) {
         ClientLevel level = Minecraft.getInstance().level;
@@ -164,9 +162,9 @@ public class EnchantmentCracker {
                 boolean bookshelfCountMatches = numBookshelves == expectedNumBookshelves || (numBookshelves > 15 && expectedNumBookshelves == 15);
                 lines.add(Component.translatable("enchCrack.bookshelfCount.expected", expectedNumBookshelves));
                 lines.add(Component.translatable(
-                    "enchCrack.bookshelfCount.actual",
-                    Component.literal(String.valueOf(numBookshelves))
-                        .withStyle(bookshelfCountMatches ? ChatFormatting.GREEN : ChatFormatting.RED)
+                        "enchCrack.bookshelfCount.actual",
+                        Component.literal(String.valueOf(numBookshelves))
+                                .withStyle(bookshelfCountMatches ? ChatFormatting.GREEN : ChatFormatting.RED)
                 ));
                 if (!bookshelfCountMatches) {
                     lines.add(Component.translatable("enchCrack.bookshelfCount.incorrect").withStyle(ChatFormatting.RED));
@@ -199,17 +197,6 @@ public class EnchantmentCracker {
             y += font.lineHeight;
         }
     }
-
-    // LOGIC
-    /*
-     * This section is in charge of the logic of the cracking
-     */
-
-    static Set<Integer> possibleXPSeeds = new HashSet<>(1 << 20);
-    private static int firstXpSeed;
-    @Nullable
-    public static BlockPos enchantingTablePos = null;
-    private static boolean doneEnchantment = false;
 
     public static void resetCracker() {
         Configs.enchCrackState = CrackState.UNCRACKED;
@@ -279,7 +266,8 @@ public class EnchantmentCracker {
 
         // brute force the possible seeds
         Iterator<Integer> xpSeedItr = possibleXPSeeds.iterator();
-        seedLoop: while (xpSeedItr.hasNext()) {
+        seedLoop:
+        while (xpSeedItr.hasNext()) {
             int xpSeed = xpSeedItr.next();
             rand.setSeed(xpSeed);
 
@@ -414,8 +402,8 @@ public class EnchantmentCracker {
         assert player != null;
 
         ExecutorService threadPool = Executors.newFixedThreadPool(
-            Math.max(1, Runtime.getRuntime().availableProcessors() - (Minecraft.getInstance().hasSingleplayerServer() ? 2 : 1)),
-            new ThreadFactoryBuilder().setNameFormat("Enchantment Cracker #%d").build()
+                Math.max(1, Runtime.getRuntime().availableProcessors() - (Minecraft.getInstance().hasSingleplayerServer() ? 2 : 1)),
+                new ThreadFactoryBuilder().setNameFormat("Enchantment Cracker #%d").build()
         );
 
         int noDummyXpSeed = Configs.enchCrackState == CrackState.CRACKED ? possibleXPSeeds.iterator().next() : 0;
@@ -437,8 +425,8 @@ public class EnchantmentCracker {
                     Rand playerRand = new Rand(LCG.JAVA, playerSeed);
                     playerRand.advance(Math.max(times, 0) * 4L);
                     int xpSeed = times == ManipulateResult.NO_DUMMY ?
-                        noDummyXpSeed
-                        : (int) playerRand.nextBits(32);
+                            noDummyXpSeed
+                            : (int) playerRand.nextBits(32);
 
                     int[] enchantLevels = new int[3];
                     RandomSource rand = RandomSource.create();
@@ -455,8 +443,8 @@ public class EnchantmentCracker {
                         for (int slot = 0; slot < maxEnchantSlot; slot++) {
                             List<EnchantmentInstance> enchantments = getEnchantmentList(enchantmentRegistry, rand, xpSeed, stack, slot, enchantLevels[slot], version);
                             if (enchantmentsPredicate.test(enchantments)
-                                && enchantLevels[slot] >= Configs.getMinEnchantLevels()
-                                && enchantLevels[slot] <= Configs.getMaxEnchantLevels()
+                                    && enchantLevels[slot] >= Configs.getMinEnchantLevels()
+                                    && enchantLevels[slot] <= Configs.getMaxEnchantLevels()
                             ) {
                                 return new ManipulateResult(times, bookshelvesNeeded, slot, enchantments);
                             }
@@ -485,9 +473,9 @@ public class EnchantmentCracker {
         currentEnchantingTask = new WeakReference<>(taskList);
 
         taskList.addTask(new SimpleTask() {
-            private int index = 0;
             @Nullable
             ManipulateResult finalResult = null;
+            private int index = 0;
             private boolean hasShutDown = false;
 
             @Override
@@ -675,10 +663,10 @@ public class EnchantmentCracker {
             list = EnchantmentHelper.selectEnchantment(rand, stack, level, StreamSupport.stream(tag.spliterator(), false));
         } else {
             list = LegacyEnchantment.addRandomEnchantments(rand, stack, level, false, version).stream()
-                .flatMap(legacyEnch -> enchantmentRegistry.get(legacyEnch.ench().enchantmentKey)
-                    .map(ench -> new EnchantmentInstance(ench, legacyEnch.level()))
-                    .stream())
-                .collect(Collectors.toCollection(ArrayList::new));
+                    .flatMap(legacyEnch -> enchantmentRegistry.get(legacyEnch.ench().enchantmentKey)
+                            .map(ench -> new EnchantmentInstance(ench, legacyEnch.level()))
+                            .stream())
+                    .collect(Collectors.toCollection(ArrayList::new));
         }
 
         if (stack.getItem() == Items.BOOK && list.size() > 1) {
@@ -736,14 +724,11 @@ public class EnchantmentCracker {
         list.sort(Comparator.comparingInt(ench -> tooltipIndex.getInt(ench.enchantment())));
     }
 
-    public record ManipulateResult(int itemThrows, int bookshelves, int slot, List<EnchantmentInstance> enchantments) {
-        public static final int NO_DUMMY = -1;
-    }
-
     public enum CrackState implements StringRepresentable {
         UNCRACKED("uncracked"), CRACKED("cracked"), CRACKING("cracking");
 
         private final String name;
+
         CrackState(String name) {
             this.name = name;
         }
@@ -752,6 +737,10 @@ public class EnchantmentCracker {
         public String getSerializedName() {
             return name;
         }
+    }
+
+    public record ManipulateResult(int itemThrows, int bookshelves, int slot, List<EnchantmentInstance> enchantments) {
+        public static final int NO_DUMMY = -1;
     }
 
 }

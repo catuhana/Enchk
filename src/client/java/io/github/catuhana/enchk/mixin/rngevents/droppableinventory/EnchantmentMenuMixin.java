@@ -10,7 +10,9 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(EnchantmentMenu.class)
 public abstract class EnchantmentMenuMixin implements IDroppableInventoryContainer {
 
-    @Shadow @Final private Container enchantSlots;
+    @Shadow
+    @Final
+    private Container enchantSlots;
 
     @Override
     public Container getDroppableInventory() {

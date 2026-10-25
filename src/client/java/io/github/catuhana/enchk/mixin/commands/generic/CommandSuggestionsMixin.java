@@ -23,8 +23,8 @@ public class CommandSuggestionsMixin {
     private ParseResults<SharedSuggestionProvider> currentParse;
 
     @ModifyExpressionValue(
-        method = "updateCommandInfo",
-        at = @At(value = "INVOKE", target = "Lcom/mojang/brigadier/CommandDispatcher;getCompletionSuggestions(Lcom/mojang/brigadier/ParseResults;I)Ljava/util/concurrent/CompletableFuture;", remap = false)
+            method = "updateCommandInfo",
+            at = @At(value = "INVOKE", target = "Lcom/mojang/brigadier/CommandDispatcher;getCompletionSuggestions(Lcom/mojang/brigadier/ParseResults;I)Ljava/util/concurrent/CompletableFuture;", remap = false)
     )
     private CompletableFuture<Suggestions> filterSuggestions(CompletableFuture<Suggestions> original) {
         assert currentParse != null;

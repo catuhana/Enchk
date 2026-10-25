@@ -32,15 +32,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity {
-    @Shadow
-    public abstract boolean isAlive();
-
     @Unique
     private BlockPos clientLastPos;
 
     public LivingEntityMixin(EntityType<?> entityType_1, Level level_1) {
         super(entityType_1, level_1);
     }
+
+    @Shadow
+    public abstract boolean isAlive();
 
     @Inject(method = "drop", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;isClientSide()Z"))
     private void onDrop(CallbackInfoReturnable<ItemEntity> ci) {

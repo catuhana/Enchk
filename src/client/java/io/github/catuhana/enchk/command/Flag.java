@@ -20,7 +20,8 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.*;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.getActiveDispatcher;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal;
 
 public final class Flag<T> {
     private final String name;
@@ -42,6 +43,46 @@ public final class Flag<T> {
         return new Builder<Boolean>(name).withDefaultValue(false);
     }
 
+    public static boolean isFlag(String argument) {
+        return (argument.startsWith("-") && argument.length() == 2) || argument.startsWith("--");
+    }
+
+    public static <S> S getActualSource(ParseResults<S> parse) {
+        return getActualSource(parse.getContext().build(parse.getReader().getString()));
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <S> S getActualSource(CommandContext<S> ctx) {
+        if (ctx.getRootNode() == Objects.requireNonNull(Minecraft.getInstance().getConnection()).getCommands().getRoot()) {
+            // we're in the completion dispatcher, reparse using the real dispatcher to get the redirects
+            return (S) getActualSource(Objects.requireNonNull(getActiveDispatcher()).parse(
+                    StringRange.encompassing(ctx.getRange(), ctx.getLastChild().getRange()).get(ctx.getInput()),
+                    (FabricClientCommandSource) ctx.getSource()
+            ));
+        }
+
+        S source = ctx.getSource();
+        do {
+            if (ctx.hasNodes()) {
+                RedirectModifier<S> redirectModifier = ctx.getRedirectModifier();
+                if (redirectModifier != null) {
+                    try {
+                        Collection<S> newSources = redirectModifier.apply(ctx.copyFor(source));
+                        if (newSources.size() != 1) {
+                            return source;
+                        }
+                        source = newSources.iterator().next();
+                    } catch (CommandSyntaxException e) {
+                        return source;
+                    }
+                }
+            }
+            ctx = ctx.getChild();
+        } while (ctx != null);
+
+        return source;
+    }
+
     @Nullable
     public String getShortFlag() {
         return shortName == null ? null : "-" + shortName;
@@ -49,10 +90,6 @@ public final class Flag<T> {
 
     public String getFlag() {
         return "--" + name;
-    }
-
-    public static boolean isFlag(String argument) {
-        return (argument.startsWith("-") && argument.length() == 2) || argument.startsWith("--");
     }
 
     public T getDefaultValue() {
@@ -88,42 +125,6 @@ public final class Flag<T> {
         if (shortName != null) {
             addLiteralFlagToCommand(getShortFlag(), dispatcher, baseNode, function);
         }
-    }
-
-    public static <S> S getActualSource(ParseResults<S> parse) {
-        return getActualSource(parse.getContext().build(parse.getReader().getString()));
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <S> S getActualSource(CommandContext<S> ctx) {
-        if (ctx.getRootNode() == Objects.requireNonNull(Minecraft.getInstance().getConnection()).getCommands().getRoot()) {
-            // we're in the completion dispatcher, reparse using the real dispatcher to get the redirects
-            return (S) getActualSource(Objects.requireNonNull(getActiveDispatcher()).parse(
-                StringRange.encompassing(ctx.getRange(), ctx.getLastChild().getRange()).get(ctx.getInput()),
-                (FabricClientCommandSource) ctx.getSource()
-            ));
-        }
-
-        S source = ctx.getSource();
-        do {
-            if (ctx.hasNodes()) {
-                RedirectModifier<S> redirectModifier = ctx.getRedirectModifier();
-                if (redirectModifier != null) {
-                    try {
-                        Collection<S> newSources = redirectModifier.apply(ctx.copyFor(source));
-                        if (newSources.size() != 1) {
-                            return source;
-                        }
-                        source = newSources.iterator().next();
-                    } catch (CommandSyntaxException e) {
-                        return source;
-                    }
-                }
-            }
-            ctx = ctx.getChild();
-        } while (ctx != null);
-
-        return source;
     }
 
     public static final class Builder<T> {

@@ -10,7 +10,9 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(GrindstoneMenu.class)
 public class GrindstoneMenuMixin implements IDroppableInventoryContainer {
 
-    @Shadow @Final Container repairSlots;
+    @Shadow
+    @Final
+    Container repairSlots;
 
     @Override
     public Container getDroppableInventory() {

@@ -1,7 +1,7 @@
 package io.github.catuhana.enchk.mixin.events;
 
-import io.netty.channel.ChannelFutureListener;
 import io.github.catuhana.enchk.event.ClientConnectionEvents;
+import io.netty.channel.ChannelFutureListener;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.Connection;
 import net.minecraft.network.PacketListener;
@@ -26,19 +26,19 @@ public class ConnectionMixin {
     @Shadow
     private PacketFlow receiving;
 
-    @Inject(method = "sendPacket", at = @At("HEAD"))
-    private void onSendPacket(Packet<?> packet, @Nullable ChannelFutureListener listener, boolean flush, CallbackInfo ci) {
-        if (this.receiving == PacketFlow.CLIENTBOUND && this.packetListener instanceof ClientPacketListener connection) {
-            unpackBundle(packet, subPacket -> ClientConnectionEvents.SEND_PACKET.invoker().onSendPacket(connection, subPacket));
-        }
-    }
-
     @Unique
     private static void unpackBundle(Packet<?> packet, Consumer<Packet<?>> action) {
         if (packet instanceof BundlePacket<?> bundle) {
             bundle.subPackets().forEach(subPacket -> unpackBundle(subPacket, action));
         } else {
             action.accept(packet);
+        }
+    }
+
+    @Inject(method = "sendPacket", at = @At("HEAD"))
+    private void onSendPacket(Packet<?> packet, @Nullable ChannelFutureListener listener, boolean flush, CallbackInfo ci) {
+        if (this.receiving == PacketFlow.CLIENTBOUND && this.packetListener instanceof ClientPacketListener connection) {
+            unpackBundle(packet, subPacket -> ClientConnectionEvents.SEND_PACKET.invoker().onSendPacket(connection, subPacket));
         }
     }
 }
