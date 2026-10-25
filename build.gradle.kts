@@ -1,5 +1,3 @@
-import net.fabricmc.loom.task.prod.ClientProductionRunTask
-
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.fabric.loom)
@@ -28,9 +26,17 @@ repositories {
 }
 
 loom {
-    accessWidenerPath = file("src/main/resources/enchk.aw")
+    accessWidenerPath = file("src/main/resources/enchk.classtweaker")
 
     splitEnvironmentSourceSets()
+
+    runs {
+        named("client") {
+            runDirectory = file("run/")
+        }
+
+        remove(getByName("server"))
+    }
 
     mods {
         register("enchk") {
@@ -71,7 +77,9 @@ dependencies {
 
 tasks {
     jar {
-        from(configurations["includedLibrary"].map { if (it.isDirectory) it else zipTree(it) }) {
+        from(provider {
+            includedLibrary.map { if (it.isDirectory) it else zipTree(it) }
+        }) {
             include("com/seedfinding/**")
         }
 
@@ -95,17 +103,6 @@ tasks {
         }
     }
 
-    withType<JavaCompile> {
-        options.encoding = "UTF-8"
-    }
-
-    @Suppress("UnstableApiUsage")
-    register<ClientProductionRunTask>("prodClientTask") {
-        description = ""
-
-        runDir = file("run")
-    }
-
     register<JavaExec>("codeGenTask") {
         description = ""
 
@@ -116,4 +113,9 @@ tasks {
 
         args(file("src/main/java").absolutePath)
     }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.encoding = "UTF-8"
+    options.release = javaVersion.toInt()
 }
