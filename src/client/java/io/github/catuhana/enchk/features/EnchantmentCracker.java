@@ -9,7 +9,6 @@ import io.github.catuhana.enchk.Configs;
 import io.github.catuhana.enchk.command.ClientCommandHelper;
 import io.github.catuhana.enchk.event.ClientLevelEvents;
 import io.github.catuhana.enchk.task.*;
-import io.github.catuhana.enchk.util.MultiVersionCompat;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.ChatFormatting;
@@ -41,7 +40,6 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.EnchantingTableBlock;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -53,11 +51,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class EnchantmentCracker {
-
     /*
      * The enchantment cracker works as follows:
      *
@@ -220,12 +216,12 @@ public class EnchantmentCracker {
     }
 
     private static int getMenuXpSeedMask() {
-        return MultiVersionCompat.INSTANCE.getProtocolVersion() < MultiVersionCompat.V1_14 ? 0xfff0 : 0xffff;
+        return 0xffff;
     }
 
     private static void prepareForNextEnchantmentSeedCrack(int serverReportedXPSeed) {
         serverReportedXPSeed &= getMenuXpSeedMask();
-        int maxLowBits = MultiVersionCompat.INSTANCE.getProtocolVersion() < MultiVersionCompat.V1_14 ? 15 : 0;
+        int maxLowBits = 0;
         for (int highBits = 0; highBits < 65536; highBits++) {
             for (int low4Bits = 0; low4Bits <= maxLowBits; low4Bits++) {
                 possibleXPSeeds.add((highBits << 16) | serverReportedXPSeed | low4Bits);
@@ -262,7 +258,6 @@ public class EnchantmentCracker {
 
         Registry<Enchantment> enchantmentRegistry = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
         IdMap<Holder<Enchantment>> enchantmentIdMap = enchantmentRegistry.asHolderIdMap();
-        int version = MultiVersionCompat.INSTANCE.getProtocolVersion();
 
         // brute force the possible seeds
         Iterator<Integer> xpSeedItr = possibleXPSeeds.iterator();
@@ -286,7 +281,7 @@ public class EnchantmentCracker {
             // generate enchantment clues and see if they match
             for (int slot = 0; slot < 3; slot++) {
                 if (actualEnchantCosts[slot] > 0) {
-                    List<EnchantmentInstance> enchantments = getEnchantmentList(enchantmentRegistry, rand, xpSeed, itemToEnchant, slot, actualEnchantCosts[slot], version);
+                    List<EnchantmentInstance> enchantments = getEnchantmentList(enchantmentRegistry, rand, xpSeed, itemToEnchant, slot, actualEnchantCosts[slot]);
                     if (enchantments.isEmpty()) {
                         // check that there is indeed no enchantment clue
                         if (actualEnchantmentClues[slot] != -1 || actualLevelClues[slot] != -1) {
@@ -411,7 +406,6 @@ public class EnchantmentCracker {
         ItemStack stack = new ItemStack(item);
         long playerSeed = PlayerRandCracker.getSeed();
         Registry<Enchantment> enchantmentRegistry = player.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
-        int version = MultiVersionCompat.INSTANCE.getProtocolVersion();
 
         List<CompletableFuture<@Nullable ManipulateResult>> futures = new ArrayList<>();
 
@@ -441,7 +435,7 @@ public class EnchantmentCracker {
                         }
                         int maxEnchantSlot = Configs.getMaxEnchantSlot();
                         for (int slot = 0; slot < maxEnchantSlot; slot++) {
-                            List<EnchantmentInstance> enchantments = getEnchantmentList(enchantmentRegistry, rand, xpSeed, stack, slot, enchantLevels[slot], version);
+                            List<EnchantmentInstance> enchantments = getEnchantmentList(enchantmentRegistry, rand, xpSeed, stack, slot, enchantLevels[slot]);
                             if (enchantmentsPredicate.test(enchantments)
                                     && enchantLevels[slot] >= Configs.getMinEnchantLevels()
                                     && enchantLevels[slot] <= Configs.getMaxEnchantLevels()
@@ -630,44 +624,21 @@ public class EnchantmentCracker {
     private static int getEnchantPower(Level level, BlockPos tablePos) {
         int power = 0;
 
-        int protocolVersion = MultiVersionCompat.INSTANCE.getProtocolVersion();
-
         for (BlockPos bookshelfOffset : EnchantingTableBlock.BOOKSHELF_OFFSETS) {
-            if (protocolVersion <= MultiVersionCompat.V1_18) {
-                // old bookshelf detection method
-                BlockPos obstructionPos = tablePos.offset(Mth.clamp(bookshelfOffset.getX(), -1, 1), 0, Mth.clamp(bookshelfOffset.getZ(), -1, 1));
-                if (level.getBlockState(tablePos.offset(bookshelfOffset)).is(Blocks.BOOKSHELF) && level.getBlockState(obstructionPos).isAir()) {
-                    power++;
-                }
-            } else if (protocolVersion < MultiVersionCompat.V1_20) {
-                // any non-air block used to obstruct bookshelves
-                BlockPos obstructionPos = tablePos.offset(bookshelfOffset.getX() / 2, bookshelfOffset.getY(), bookshelfOffset.getZ() / 2);
-                if (level.getBlockState(tablePos.offset(bookshelfOffset)).is(Blocks.BOOKSHELF) && level.getBlockState(obstructionPos).isAir()) {
-                    power++;
-                }
-            } else {
-                if (EnchantingTableBlock.isValidBookShelf(level, tablePos, bookshelfOffset)) {
-                    power++;
-                }
+            if (EnchantingTableBlock.isValidBookShelf(level, tablePos, bookshelfOffset)) {
+                power++;
             }
         }
 
         return power;
     }
 
-    private static List<EnchantmentInstance> getEnchantmentList(Registry<Enchantment> enchantmentRegistry, RandomSource rand, int xpSeed, ItemStack stack, int enchantSlot, int level, int version) {
+    private static List<EnchantmentInstance> getEnchantmentList(Registry<Enchantment> enchantmentRegistry, RandomSource rand, int xpSeed, ItemStack stack, int enchantSlot, int level) {
         rand.setSeed(xpSeed + enchantSlot);
         List<EnchantmentInstance> list;
-        if (version >= MultiVersionCompat.V1_21) {
-            var tag = enchantmentRegistry.getTagOrEmpty(EnchantmentTags.IN_ENCHANTING_TABLE);
-            list = EnchantmentHelper.selectEnchantment(rand, stack, level, StreamSupport.stream(tag.spliterator(), false));
-        } else {
-            list = LegacyEnchantment.addRandomEnchantments(rand, stack, level, false, version).stream()
-                    .flatMap(legacyEnch -> enchantmentRegistry.get(legacyEnch.ench().enchantmentKey)
-                            .map(ench -> new EnchantmentInstance(ench, legacyEnch.level()))
-                            .stream())
-                    .collect(Collectors.toCollection(ArrayList::new));
-        }
+
+        var tag = enchantmentRegistry.getTagOrEmpty(EnchantmentTags.IN_ENCHANTING_TABLE);
+        list = EnchantmentHelper.selectEnchantment(rand, stack, level, StreamSupport.stream(tag.spliterator(), false));
 
         if (stack.getItem() == Items.BOOK && list.size() > 1) {
             list.remove(rand.nextInt(list.size()));
@@ -705,15 +676,11 @@ public class EnchantmentCracker {
             int xpSeed = possibleXPSeeds.iterator().next();
             ItemStack enchantingStack = menu.getSlot(0).getItem();
             int enchantLevels = menu.costs[slot];
-            return getEnchantmentList(enchantmentRegistry, rand, xpSeed, enchantingStack, slot, enchantLevels, MultiVersionCompat.INSTANCE.getProtocolVersion());
+            return getEnchantmentList(enchantmentRegistry, rand, xpSeed, enchantingStack, slot, enchantLevels);
         }
     }
 
     public static void sortIntoTooltipOrder(Registry<Enchantment> enchantmentRegistry, List<EnchantmentInstance> list) {
-        if (MultiVersionCompat.INSTANCE.getProtocolVersion() < MultiVersionCompat.V1_21) {
-            return;
-        }
-
         var tooltipOrder = enchantmentRegistry.getTagOrEmpty(EnchantmentTags.TOOLTIP_ORDER);
         Object2IntMap<Holder<Enchantment>> tooltipIndex = new Object2IntOpenHashMap<>();
         int index = 0;

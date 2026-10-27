@@ -5,8 +5,6 @@ import io.github.catuhana.enchk.Configs;
 import io.github.catuhana.enchk.command.ClientCommandHelper;
 import io.github.catuhana.enchk.event.ClientLevelEvents;
 import io.github.catuhana.enchk.interfaces.ICreativeSlot;
-import io.github.catuhana.enchk.util.CUtil;
-import io.github.catuhana.enchk.util.MultiVersionCompat;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.ChatFormatting;
@@ -15,23 +13,18 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Prediction;
 import net.minecraft.util.StringRepresentable;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.Consumable;
 import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.item.equipment.Equippable;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Comparator;
@@ -127,11 +120,6 @@ public class PlayerRandCracker {
     }
 
     public static void onConsume(int particleCount, int itemUseTimeLeft, Consumable consumable) {
-        if (consumable.animation() != ItemUseAnimation.EAT && MultiVersionCompat.INSTANCE.getProtocolVersion() < MultiVersionCompat.V1_21_2) {
-            // non-eating actions (e.g. drinking) have no random calls prior to 1.21.2
-            return;
-        }
-
         RNGCallType callType = switch (consumable.animation()) {
             case EAT -> RNGCallType.FOOD;
             case DRINK -> RNGCallType.DRINK;
@@ -161,13 +149,11 @@ public class PlayerRandCracker {
     }
 
     public static void onEquipItem() {
-        if (MultiVersionCompat.INSTANCE.getProtocolVersion() >= MultiVersionCompat.V1_20_6) {
-            if (canMaintainPlayerRNG(RNGCallType.EQUIP_ITEM)) {
-                nextInt();
-                nextInt();
-            } else {
-                resetCracker(RNGCallType.EQUIP_ITEM, false);
-            }
+        if (canMaintainPlayerRNG(RNGCallType.EQUIP_ITEM)) {
+            nextInt();
+            nextInt();
+        } else {
+            resetCracker(RNGCallType.EQUIP_ITEM, false);
         }
     }
 
@@ -181,9 +167,6 @@ public class PlayerRandCracker {
 
     public static void onCrossbowUse() {
         if (canMaintainPlayerRNG(RNGCallType.CROSSBOW)) {
-            if (MultiVersionCompat.INSTANCE.getProtocolVersion() <= MultiVersionCompat.V1_18_2) {
-                nextInt();
-            }
             nextInt();
         } else {
             resetCracker(RNGCallType.CROSSBOW, false);
@@ -191,66 +174,8 @@ public class PlayerRandCracker {
     }
 
     public static void onXpOrb() {
-        if (MultiVersionCompat.INSTANCE.getProtocolVersion() >= MultiVersionCompat.V1_17) {
-            // TODO: is there a way to be smarter about this?
-            resetCracker(RNGCallType.XP);
-        }
-    }
-
-    public static void onBaneOfArthropods() {
-        if (MultiVersionCompat.INSTANCE.getProtocolVersion() < MultiVersionCompat.V1_21) {
-            if (canMaintainPlayerRNG(RNGCallType.BANE_OF_ARTHROPODS)) {
-                nextInt();
-            } else {
-                resetCracker(RNGCallType.BANE_OF_ARTHROPODS, false);
-            }
-        }
-    }
-
-    private static void onUnbreaking(ItemStack stack, int amount, int unbreakingLevel) {
-        if (canMaintainPlayerRNG(RNGCallType.UNBREAKING)) {
-            for (int i = 0; i < amount; i++) {
-                Equippable equippableComponent = stack.get(DataComponents.EQUIPPABLE);
-                boolean isArmor = equippableComponent != null && equippableComponent.damageOnHurt();
-                if (!isArmor || nextFloat() >= 0.6) {
-                    nextInt(unbreakingLevel + 1);
-                } else {
-                    resetCracker(RNGCallType.UNBREAKING, false);
-                }
-            }
-        } else {
-            resetCracker(RNGCallType.UNBREAKING, false);
-        }
-    }
-
-    // TODO: update-sensitive: call hierarchy of ItemStack.damage
-    public static void onItemDamage(int amount, LivingEntity holder, ItemStack stack) {
-        boolean unbreakingCallsRandom = MultiVersionCompat.INSTANCE.getProtocolVersion() < MultiVersionCompat.V1_21;
-
-        if (holder instanceof LocalPlayer player && !player.getAbilities().instabuild) {
-            if (stack.isDamageableItem()) {
-                if (amount > 0) {
-                    int unbreakingLevel = CUtil.getEnchantmentLevel(holder.registryAccess(), Enchantments.UNBREAKING, stack);
-                    if (unbreakingCallsRandom && unbreakingLevel > 0) {
-                        onUnbreaking(stack, amount, unbreakingLevel);
-                    }
-                }
-            }
-        }
-    }
-
-    public static void onItemDamageUncertain(int maxAmount, LivingEntity holder, ItemStack stack) {
-        boolean unbreakingCallsRandom = MultiVersionCompat.INSTANCE.getProtocolVersion() < MultiVersionCompat.V1_21;
-        if (holder instanceof LocalPlayer player && !player.getAbilities().instabuild) {
-            if (stack.isDamageableItem()) {
-                if (maxAmount > 0) {
-                    int unbreakingLevel = CUtil.getEnchantmentLevel(holder.registryAccess(), Enchantments.UNBREAKING, stack);
-                    if (unbreakingCallsRandom && unbreakingLevel > 0) {
-                        resetCracker(RNGCallType.UNBREAKING);
-                    }
-                }
-            }
-        }
+        // TODO: is there a way to be smarter about this?
+        resetCracker(RNGCallType.XP);
     }
 
     public static void onEnchantedItem() {
@@ -373,7 +298,6 @@ public class PlayerRandCracker {
     public enum RNGCallType {
         AMETHYST_CHIME("amethystChime"),
         ANVIL("anvil"),
-        BANE_OF_ARTHROPODS("baneOfArthropods"),
         CONSUME("consume"),
         CROSSBOW("crossbow"),
         DESYNC("desync"),
@@ -387,7 +311,6 @@ public class PlayerRandCracker {
         FOOD("food"),
         FROST_WALKER("frostWalker"),
         GIVE("give"),
-        ITEM_BREAK("itemBreak"),
         MENDING("mending"),
         PLAYER_HURT("playerHurt"),
         POTION("potion"),
@@ -396,7 +319,6 @@ public class PlayerRandCracker {
         SOUL_SPEED("soulSpeed"),
         SPRINT("sprint"),
         SWIM("swim"),
-        UNBREAKING("unbreaking"),
         XP("xp"),
         ;
 

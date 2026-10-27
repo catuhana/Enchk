@@ -5,10 +5,8 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.github.catuhana.enchk.Configs;
 import io.github.catuhana.enchk.features.EnchantmentCracker;
-import io.github.catuhana.enchk.features.LegacyEnchantment;
 import io.github.catuhana.enchk.features.PlayerRandCracker;
 import io.github.catuhana.enchk.util.CComponentUtil;
-import io.github.catuhana.enchk.util.MultiVersionCompat;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -47,12 +45,7 @@ public class CEnchantCommand {
 
     private static boolean enchantmentPredicate(Item item, Holder<Enchantment> ench) {
         boolean inEnchantingTable;
-        if (MultiVersionCompat.INSTANCE.getProtocolVersion() < MultiVersionCompat.V1_21) {
-            LegacyEnchantment legacyEnch = LegacyEnchantment.byEnchantmentKey(ench.unwrapKey().orElseThrow());
-            inEnchantingTable = legacyEnch != null && legacyEnch.inEnchantmentTable();
-        } else {
-            inEnchantingTable = ench.is(EnchantmentTags.IN_ENCHANTING_TABLE);
-        }
+        inEnchantingTable = ench.is(EnchantmentTags.IN_ENCHANTING_TABLE);
         return inEnchantingTable && (item == Items.BOOK || ench.value().isPrimaryItem(new ItemStack(item)));
     }
 

@@ -2,7 +2,6 @@ package io.github.catuhana.enchk.mixin.rngevents;
 
 import com.mojang.authlib.GameProfile;
 import io.github.catuhana.enchk.features.PlayerRandCracker;
-import io.github.catuhana.enchk.util.MultiVersionCompat;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
@@ -20,10 +19,8 @@ public class LocalPlayerMixin extends AbstractClientPlayer {
 
     @Inject(method = "aiStep", at = @At("HEAD"))
     private void onTick(CallbackInfo ci) {
-        if (MultiVersionCompat.INSTANCE.getProtocolVersion() >= MultiVersionCompat.V1_21_9) {
-            if (this.getShoulderParrotLeft().isPresent() || this.getShoulderParrotRight().isPresent()) {
-                PlayerRandCracker.resetCracker(PlayerRandCracker.RNGCallType.SHOULDER_PARROT);
-            }
+        if (this.getShoulderParrotLeft().isPresent() || this.getShoulderParrotRight().isPresent()) {
+            PlayerRandCracker.resetCracker(PlayerRandCracker.RNGCallType.SHOULDER_PARROT);
         }
     }
 }

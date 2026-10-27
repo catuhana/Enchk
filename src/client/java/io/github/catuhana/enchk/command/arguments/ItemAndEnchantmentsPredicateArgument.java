@@ -9,7 +9,6 @@ import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import io.github.catuhana.enchk.util.MultiVersionCompat;
 import net.minecraft.advancements.predicates.MinMaxBounds;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ResourceArgument;
@@ -79,32 +78,20 @@ public class ItemAndEnchantmentsPredicateArgument implements ArgumentType<ItemAn
             if (parser.exact && (parser.with.size() != enchantments.size())) {
                 return false;
             }
-            if (parser.ordered) {
-                int enchIndex = 0;
-                for (EnchantmentInstancePredicate with : parser.with) {
-                    while (enchIndex < enchantments.size() && !with.test(enchantments.get(enchIndex))) {
-                        enchIndex++;
+
+            for (EnchantmentInstancePredicate with : parser.with) {
+                boolean found = false;
+                for (EnchantmentInstance ench : enchantments) {
+                    if (with.test(ench)) {
+                        found = true;
+                        break;
                     }
-                    if (enchIndex >= enchantments.size()) {
-                        return false;
-                    }
-                    // we're matching, increment index
-                    enchIndex++;
                 }
-            } else {
-                for (EnchantmentInstancePredicate with : parser.with) {
-                    boolean found = false;
-                    for (EnchantmentInstance ench : enchantments) {
-                        if (with.test(ench)) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        return false;
-                    }
+                if (!found) {
+                    return false;
                 }
             }
+
             if (parser.exact) {
                 return true;
             }
@@ -174,7 +161,6 @@ public class ItemAndEnchantmentsPredicateArgument implements ArgumentType<ItemAn
         private Consumer<SuggestionsBuilder> suggestor;
         private Item item;
         private boolean exact = false;
-        private boolean ordered = false;
 
         public Parser(StringReader reader) {
             this.reader = reader;
@@ -224,12 +210,8 @@ public class ItemAndEnchantmentsPredicateArgument implements ArgumentType<ItemAn
                 exact = true;
                 return true;
             }
-            if (option == Option.ORDERED) {
-                ordered = true;
-                return true;
-            }
 
-            if (exact || ordered) {
+            if (exact) {
                 reader.setCursor(start);
                 return false;
             }
@@ -258,8 +240,6 @@ public class ItemAndEnchantmentsPredicateArgument implements ArgumentType<ItemAn
                 case "with" -> Option.WITH;
                 case "without" -> Option.WITHOUT;
                 case "exactly" -> exact ? null : Option.EXACT;
-                case "ordered" ->
-                        ordered || MultiVersionCompat.INSTANCE.getProtocolVersion() >= MultiVersionCompat.V1_21 ? null : Option.ORDERED;
                 default -> null;
             };
         }
@@ -413,13 +393,9 @@ public class ItemAndEnchantmentsPredicateArgument implements ArgumentType<ItemAn
             List<Identifier> allowed = new ArrayList<>();
             for (Item item : BuiltInRegistries.ITEM) {
                 if (item.components().has(DataComponents.ENCHANTABLE) && itemPredicate.test(item)) {
-                    if (MultiVersionCompat.INSTANCE.doesItemExist(item)) {
-                        allowed.add(BuiltInRegistries.ITEM.getKey(item));
-                    }
+                    allowed.add(BuiltInRegistries.ITEM.getKey(item));
                 } else if (item == Items.ENCHANTED_BOOK && itemPredicate.test(Items.BOOK)) {
-                    if (MultiVersionCompat.INSTANCE.doesItemExist(item)) {
-                        allowed.add(BuiltInRegistries.ITEM.getKey(Items.ENCHANTED_BOOK));
-                    }
+                    allowed.add(BuiltInRegistries.ITEM.getKey(Items.ENCHANTED_BOOK));
                 }
             }
             int start = reader.getCursor();
@@ -435,14 +411,11 @@ public class ItemAndEnchantmentsPredicateArgument implements ArgumentType<ItemAn
             suggestor = suggestions -> {
                 SuggestionsBuilder builder = suggestions.createOffset(start);
                 List<String> validOptions = new ArrayList<>(4);
-                if (!exact && !ordered) {
+                if (!exact) {
                     Collections.addAll(validOptions, "with", "without");
                 }
                 if (!exact) {
                     validOptions.add("exactly");
-                }
-                if (!ordered && MultiVersionCompat.INSTANCE.getProtocolVersion() < MultiVersionCompat.V1_21) {
-                    validOptions.add("ordered");
                 }
                 SharedSuggestionProvider.suggest(validOptions, builder);
                 suggestions.add(builder);
@@ -453,7 +426,6 @@ public class ItemAndEnchantmentsPredicateArgument implements ArgumentType<ItemAn
             WITH,
             WITHOUT,
             EXACT,
-            ORDERED,
         }
     }
 }

@@ -2,7 +2,6 @@ package io.github.catuhana.enchk.mixin.rngevents;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import io.github.catuhana.enchk.features.PlayerRandCracker;
-import io.github.catuhana.enchk.util.MultiVersionCompat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -23,27 +22,24 @@ import java.util.Arrays;
 @Mixin(ClientLevel.class)
 public class ClientLevelMixin {
     @Inject(method = "removeEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;onClientRemoval()V"))
-    private void onRemoveEntity(int entityId, Entity.RemovalReason reason, CallbackInfo ci, @Local Entity entity) {
-        if (entity instanceof ExperienceOrb) {
-            LocalPlayer player = Minecraft.getInstance().player;
-            assert player != null;
-            if (player.getBoundingBox().inflate(1.25, 0.75, 1.25).intersects(entity.getBoundingBox())) {
-                PlayerRandCracker.onXpOrb();
-                if (Arrays.stream(EquipmentSlot.values()).anyMatch(slot -> couldMendingRepair(player.getItemBySlot(slot)))) {
-                    PlayerRandCracker.resetCracker(PlayerRandCracker.RNGCallType.MENDING);
-                }
+    private void onRemoveEntity(int id, Entity.RemovalReason reason, CallbackInfo ci, @Local Entity entity) {
+        if (!(entity instanceof ExperienceOrb)) {
+            return;
+        }
+
+        LocalPlayer player = Minecraft.getInstance().player;
+        assert player != null;
+
+        if (player.getBoundingBox().inflate(1.25, 0.75, 1.25).intersects(entity.getBoundingBox())) {
+            PlayerRandCracker.onXpOrb();
+            if (Arrays.stream(EquipmentSlot.values()).anyMatch(slot -> couldMendingRepair(player.getItemBySlot(slot)))) {
+                PlayerRandCracker.resetCracker(PlayerRandCracker.RNGCallType.MENDING);
             }
         }
     }
 
     @Unique
     private boolean couldMendingRepair(ItemStack stack) {
-        if (!EnchantmentHelper.has(stack, EnchantmentEffectComponents.REPAIR_WITH_XP)) {
-            return false;
-        }
-        if (MultiVersionCompat.INSTANCE.getProtocolVersion() <= MultiVersionCompat.V1_15_2) {
-            return true; // xp may try to mend items even if they're fully repaired pre-1.16
-        }
-        return stack.isDamaged();
+        return EnchantmentHelper.has(stack, EnchantmentEffectComponents.REPAIR_WITH_XP) && stack.isDamaged();
     }
 }

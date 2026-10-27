@@ -1,11 +1,8 @@
 package io.github.catuhana.enchk.mixin.rngevents;
 
-import com.google.common.base.Objects;
 import io.github.catuhana.enchk.features.PlayerRandCracker;
 import io.github.catuhana.enchk.util.CUtil;
-import io.github.catuhana.enchk.util.MultiVersionCompat;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
@@ -18,10 +15,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.FrostedIceBlock;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.shapes.CollisionContext;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -32,9 +25,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity {
-    @Unique
-    private BlockPos clientLastPos;
-
     public LivingEntityMixin(EntityType<?> entityType_1, Level level_1) {
         super(entityType_1, level_1);
     }
@@ -63,15 +53,6 @@ public abstract class LivingEntityMixin extends Entity {
         }
     }
 
-    @Inject(method = "breakItem", at = @At("HEAD"))
-    private void onEquipmentBreak(ItemStack stack, CallbackInfo ci) {
-        if (isThePlayer()) {
-            if (MultiVersionCompat.INSTANCE.getProtocolVersion() <= MultiVersionCompat.V1_13_2) {
-                PlayerRandCracker.resetCracker(PlayerRandCracker.RNGCallType.ITEM_BREAK);
-            }
-        }
-    }
-
     @Inject(method = "onEquipItem", at = @At("HEAD"))
     private void onOnEquipItem(EquipmentSlot slot, ItemStack oldItem, ItemStack newItem, CallbackInfo ci) {
         if (isThePlayer()) {
@@ -88,9 +69,7 @@ public abstract class LivingEntityMixin extends Entity {
     @Inject(method = "updateFallFlying", at = @At("HEAD"))
     private void onUpdateFallFlying(CallbackInfo ci) {
         if (isThePlayer()) {
-            if (MultiVersionCompat.INSTANCE.getProtocolVersion() >= MultiVersionCompat.V1_21_2) {
-                PlayerRandCracker.resetCracker(PlayerRandCracker.RNGCallType.FALL_FLYING);
-            }
+            PlayerRandCracker.resetCracker(PlayerRandCracker.RNGCallType.FALL_FLYING);
         }
     }
 
@@ -98,37 +77,6 @@ public abstract class LivingEntityMixin extends Entity {
     private void onPotionParticles(CallbackInfo ci) {
         if (isThePlayer()) {
             PlayerRandCracker.resetCracker(PlayerRandCracker.RNGCallType.POTION);
-        }
-    }
-
-    @Inject(method = "baseTick", at = @At("RETURN"))
-    private void testFrostWalker(CallbackInfo ci) {
-        if (!isThePlayer()) {
-            return;
-        }
-
-        if (MultiVersionCompat.INSTANCE.getProtocolVersion() < MultiVersionCompat.V1_21) {
-            BlockPos pos = blockPosition();
-            if (!Objects.equal(pos, this.clientLastPos)) {
-                this.clientLastPos = pos;
-                if (onGround()) {
-                    int frostWalkerLevel = CUtil.getEnchantmentLevel(Enchantments.FROST_WALKER, (LivingEntity) (Object) this);
-                    if (frostWalkerLevel > 0) {
-                        BlockState frostedIce = Blocks.FROSTED_ICE.defaultBlockState();
-                        int radius = Math.min(16, frostWalkerLevel + 2);
-                        for (BlockPos offsetPos : BlockPos.betweenClosed(pos.offset(-radius, -1, -radius), pos.offset(radius, -1, radius))) {
-                            if (offsetPos.closerToCenterThan(position(), radius)) {
-                                BlockState offsetState = level().getBlockState(offsetPos);
-                                if (offsetState == FrostedIceBlock.meltsInto() && level().isUnobstructed(frostedIce, offsetPos, CollisionContext.empty())) {
-                                    if (level().isEmptyBlock(offsetPos.above())) {
-                                        PlayerRandCracker.resetCracker(PlayerRandCracker.RNGCallType.FROST_WALKER);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 
