@@ -12,7 +12,10 @@
   ],
   "entrypoints": {
     "client": [
-      "io.github.catuhana.enchk.Enchk"
+      {
+        "adapter": "kotlin",
+        "value": "io.github.catuhana.enchk.Enchk"
+      }
     ]
   },
   "depends": {
@@ -20,6 +23,7 @@
     "java": ">=${java_version}",
     "fabricloader": ">=${loader_version}",
     "fabric-api": "*",
+    "fabric-language-kotlin": ">=${fabric_kotlin_version}",
     "betterconfig": "*"
   },
   "mixins": [

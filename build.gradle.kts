@@ -49,8 +49,9 @@ loom {
 dependencies {
     minecraft(libs.minecraft)
 
-    implementation(libs.fabric.loader)
     implementation(libs.fabric.api)
+    implementation(libs.fabric.loader)
+    implementation(libs.fabric.language.kotlin)
 
     include(implementation(libs.betterconfig.fabric.get())!!)
 
@@ -94,6 +95,7 @@ tasks {
             "minecraft_version" to libs.versions.minecraft.get(),
             "java_version" to javaVersion,
             "loader_version" to libs.versions.fabric.loader.get(),
+            "fabric_kotlin_version" to libs.versions.fabric.language.kotlin.get()
         )
 
         inputs.properties(properties)

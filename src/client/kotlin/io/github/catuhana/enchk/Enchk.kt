@@ -19,7 +19,7 @@ import net.minecraft.commands.CommandBuildContext
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 
-class Enchk : ClientModInitializer {
+object Enchk : ClientModInitializer {
     private val LOGGER = LogUtils.getLogger()
     val CONFIG_DIR: Path = FabricLoader.getInstance().configDir.resolve("enchk")
 
